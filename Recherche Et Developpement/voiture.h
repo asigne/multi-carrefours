@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <semaphore.h>
 #include <unistd.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <sys/sem.h>
 
 
-sem_t sem_in_out[12];
-sem_t sem_generale;
+
+int sem_in_out[4];
 
 enum
 {
@@ -44,3 +44,24 @@ typedef struct
 
 void traitement(mess*);
 
+
+
+typedef struct
+{
+	short sem_num;
+	short sem_op;
+	short sem_flg;
+} sembuf;
+
+
+int creerSem(int clef);
+
+void initSem(int id, int valeur);
+
+int PSem(int id);
+
+int VSem(int id);
+
+void destructionSem(int id);
+
+void afficheEtatSem();

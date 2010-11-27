@@ -18,11 +18,10 @@ int main()
 		
 		int i;
 		
-		sem_init(&sem_generale, 0, 1);
-		
-		for(i = 0; i<12; i++)
-			sem_init(&sem_in_out[i], 0, 1);
-		
+		for(i = 0; i<4; i++){
+			sem_in_out[i]=creerSem(i+10000);
+			initSem(sem_in_out[i], 1);
+		}
 		
 		pthread_t thread_traitement[3];
 		
@@ -35,36 +34,36 @@ int main()
 			
 			msgrcv(msgid, m, sizeof(mess), 0, 0);
 			
-			printf("Lecture message...\n");
+			//printf("Lecture message...\n");
 			
 			// file de la voiture = m.type
 			// les infos de la voiture = m.car
 			
 			//voiture* v = m.car;
 			
-			printf("MSG type = %d\n", (int)m->type);
+			//printf("MSG type = %d\n", (int)m->type);
 			
 			m->car.entree = m->type-1;
 			
-			printf("Message de la voiture %d.\n", m->car.id);
+			//printf("Message de la voiture %d.\n", m->car.id);
 			
 			// crée thread traiter voiture.
 			
 			//pthread_t thread_traitement;
 			pthread_create(&thread_traitement[m->type-1], NULL, (void * (*)(void *))traitement, m);
 			
-			printf("lancement thread...\n");
+			//printf("lancement thread...\n");
 			
 			//pthread_join(thread_traitement, NULL);
 			
-			usleep(100);
+			//usleep(100);
 			
 		}
 		
 	} else {
 		// pere
 		
-		sleep(2);
+		//sleep(2);
 		
 		mess m;
 		m.car.id = 11;
@@ -76,7 +75,7 @@ int main()
 		m1.car.id = 15;
 		m1.car.sortie = EN_FACE;
 		m1.car.entree = -1;
-		m1.type = 3;
+		m1.type = 4;
 		
 		
 		mess m2;
@@ -88,11 +87,11 @@ int main()
 		
 		msgsnd(msgid, &m, sizeof(mess) - sizeof(long), 0);
 		//msgsnd(msgid, &m2, sizeof(mess) - sizeof(long), 0);
-		//sleep(2);
+		sleep(1);
 		msgsnd(msgid, &m1, sizeof(mess) - sizeof(long), 0);
 		
 		
-		printf("2 Nouvelle voiture dans la file...\n");
+		//printf("2 Nouvelle voiture dans la file...\n");
 		
 		wait();
 		
@@ -105,157 +104,222 @@ int main()
 void traitement(mess* v1)
 {
 	voiture* v = &(v1->car);
-	printf("lancement traitement\n");
+	//printf("lancement traitement\n");
 	
 	switch(v->sortie)
 	{
-	case DROITE:
-	{
-		// bloque l'accès au sémaphores.
-		sem_wait(&sem_generale);
-		printf("Acces au carrefour voiture %d.\n", v->id);
+		case DROITE:
+		{
+			// v->entree numéro de l'entrée
+			printf("Entree dans le carrefour voiture %d par l'entree %d.\n", v->id, v->entree);
+				
+			//bloquage du carrefour
+			switch (v->entree){
+				case OUEST:	
+				{				
+					PSem(sem_in_out[0]);
+					break;
+				}
+				case SUD:	
+				{				
+					PSem(sem_in_out[1]);
+					break;
+				}
+				case EST:	
+				{				
+					PSem(sem_in_out[2]);
+					break;
+				}
+				case NORD:	
+				{				
+					PSem(sem_in_out[3]);
+					break;
+				}
+			}
+			printf("Voiture id:%d, passe le carrefour !\n", v->id);
 		
-		// v->entree numéro de l'entrée
+			//liberation du carrefour
+			switch (v->entree){
+				case OUEST:	
+				{
+					VSem(sem_in_out[0]);
+					break;
+				}
+				case SUD:	
+				{
+					VSem(sem_in_out[1]);
+					break;
+				}
+				case EST:	
+				{
+					VSem(sem_in_out[2]);
+					break;
+				}
+				case NORD:	
+				{
+					VSem(sem_in_out[3]);
+					break;
+				}
+			}
+			
+			printf("Voiture id:%d, sort  carrefour !\n", v->id);
 		
-		// bloque toute les sémaphores
-		sem_wait(&sem_in_out[(v->entree*3)]);   // la sienne vers gauche
-		sem_wait(&sem_in_out[(v->entree*3)+1]); // la sienne vers en face.
-		sem_wait(&sem_in_out[(v->entree*3)+2]); // la sienne vers droite.
+			break;
+		}
+		case EN_FACE:
+		{
+			// v->entree numéro de l'entrée
+			printf("Entree dans le carrefour voiture %d par l'entree %d.\n", v->id, v->entree);
+				
+			//bloquage du carrefour
+			switch (v->entree){
+				case OUEST:	
+				{				
+					PSem(sem_in_out[0]);
+					printf("sem 0 bloquée par %d\n", v->id);
+					PSem(sem_in_out[1]);
+					printf("sem 1 bloquée par %d\n", v->id);
+					
+					break;
+				}
+				case SUD:	
+				{				
+					PSem(sem_in_out[1]);
+					PSem(sem_in_out[2]);
+					break;
+				}
+				case EST:	
+				{				
+					PSem(sem_in_out[2]);
+					PSem(sem_in_out[3]);
+					break;
+				}
+				case NORD:	
+				{				
+					PSem(sem_in_out[3]);
+					printf("sem 3 bloquée par %d\n", v->id);
+					PSem(sem_in_out[0]);
+					printf("sem 0 bloquée par %d\n", v->id);
+					break;
+				}
+			}			
+			printf("Voiture id:%d, passe le carrefour !\n", v->id);
 
-		sem_wait(&sem_in_out[((v->entree*3)+6)%12]); // ceux qui viennent d'en face
+			//liberation du carrefour
+			switch (v->entree){
+				case OUEST:	
+				{
+					VSem(sem_in_out[0]);
+					printf("sem 0 débloquée par %d\n", v->id);
+					VSem(sem_in_out[1]);
+					printf("sem 1 débloquée par %d\n", v->id);
+					break;
+				}
+				case SUD:	
+				{
+					VSem(sem_in_out[1]);
+					VSem(sem_in_out[2]);
+					break;
+				}
+				case EST:	
+				{
+					VSem(sem_in_out[2]);
+					VSem(sem_in_out[3]);
+					break;
+				}
+				case NORD:	
+				{
+					VSem(sem_in_out[3]);
+					VSem(sem_in_out[0]);
+					break;
+				}
+			}
+			
+			printf("Voiture id:%d, sort  carrefour !\n", v->id);
 		
-		sem_wait(&sem_in_out[((v->entree*3)+10)%12]); // ceux qui viennent de sa gauche
+			break;
+		}
+		case GAUCHE:
+		{
+			// v->entree numéro de l'entrée
+			printf("Entree dans le carrefour voiture %d par l'entree %d.\n", v->id, v->entree);
+				
+			//bloquage du carrefour
+			switch (v->entree){
+				case OUEST:	
+				{				
+					PSem(sem_in_out[0]);
+					PSem(sem_in_out[1]);
+					PSem(sem_in_out[2]);
+					break;
+				}
+				case SUD:	
+				{				
+					PSem(sem_in_out[1]);
+					PSem(sem_in_out[2]);
+					PSem(sem_in_out[3]);
+					break;
+				}
+				case EST:	
+				{				
+					PSem(sem_in_out[2]);
+					printf("sem 2 bloquée par %d\n", v->id);
+					PSem(sem_in_out[3]);
+					printf("sem 3 bloquée par %d\n", v->id);
+					PSem(sem_in_out[0]);
+					printf("sem 0 bloquée par %d\n", v->id);
+					break;
+				}
+				case NORD:	
+				{				
+					PSem(sem_in_out[3]);
+					PSem(sem_in_out[0]);
+					PSem(sem_in_out[1]);
+					break;
+				}
+			}
+			printf("Voiture id:%d, passe le carrefour !\n", v->id);
 		
-		sem_post(&sem_generale);
+			//liberation du carrefour
+			switch (v->entree){
+				case OUEST:	
+				{
+					VSem(sem_in_out[0]);
+					VSem(sem_in_out[1]);
+					VSem(sem_in_out[2]);
+					break;
+				}
+				case SUD:	
+				{
+					VSem(sem_in_out[1]);
+					VSem(sem_in_out[2]);
+					VSem(sem_in_out[3]);
+					break;
+				}
+				case EST:	
+				{
+					VSem(sem_in_out[2]);
+					printf("sem 2 debloquée par %d\n", v->id);
+					VSem(sem_in_out[3]);
+					printf("sem 3 debloquée par %d\n", v->id);
+					VSem(sem_in_out[0]);
+					printf("sem 0 debloquée par %d\n", v->id);
+					break;
+				}
+				case NORD:	
+				{
+					VSem(sem_in_out[3]);
+					VSem(sem_in_out[0]);
+					VSem(sem_in_out[1]);
+					break;
+				}
+			}
+			
+			printf("Voiture id:%d, sort  carrefour !\n", v->id);
 		
-		sleep(2);
-		
-		printf("Voiture id:%d, passe le carrefour !\n", v->id);
-		
-		sem_wait(&sem_generale);
-		
-		// libere le carrefour
-		sem_post(&sem_in_out[((v->entree*3)+10)%12]);
-		
-		sem_post(&sem_in_out[((v->entree*3)+6)%12]);
-		
-		sem_post(&sem_in_out[(v->entree*3)+2]);
-		sem_post(&sem_in_out[(v->entree*3)+1]);
-		sem_post(&sem_in_out[(v->entree*3)]);
-		
-		
-		// fin on libere les sémaphores
-		sem_post(&sem_generale);
-		
-		
-		break;
-	}
-	case EN_FACE:
-	{
-		// bloque l'accès au sémaphores.
-		sem_wait(&sem_generale);
-		printf("Acces au carrefour voiture %d.\n", v->id);
-		
-		// v->entree numéro de l'entrée
-		
-		// bloque toute les sémaphores
-		sem_wait(&sem_in_out[(v->entree*3)]);   // la sienne vers gauche
-		sem_wait(&sem_in_out[(v->entree*3)+1]); // la sienne vers en face.
-		sem_wait(&sem_in_out[(v->entree*3)+2]); // la sienne vers droite.
-		
-		
-		sem_wait(&sem_in_out[((v->entree*3)+3)%12]);
-		sem_wait(&sem_in_out[((v->entree*3)+4)%12]); // ceux qui viennent de sa droite
-		sem_wait(&sem_in_out[((v->entree*3)+5)%12]);
-		
-		sem_wait(&sem_in_out[((v->entree*3)+6)%12]); // ceux qui viennent d'en face
-		
-		sem_wait(&sem_in_out[((v->entree*3)+9)%12]);
-		sem_wait(&sem_in_out[((v->entree*3)+10)%12]); // ceux qui viennent de sa gauche
-		
-		sem_post(&sem_generale);
-		
-		sleep(2);
-		
-		printf("Voiture id:%d, passe le carrefour !\n", v->id);
-		
-		sem_wait(&sem_generale);
-		
-		// libere le carrefour
-		sem_post(&sem_in_out[((v->entree*3)+10)%12]);
-		sem_post(&sem_in_out[((v->entree*3)+9)%12]);
-		
-		sem_post(&sem_in_out[((v->entree*3)+6)%12]);
-		
-		sem_post(&sem_in_out[((v->entree*3)+5)%12]);
-		sem_post(&sem_in_out[((v->entree*3)+4)%12]);
-		sem_post(&sem_in_out[((v->entree*3)+3)%12]);
-		
-		sem_post(&sem_in_out[(v->entree*3)+2]);
-		sem_post(&sem_in_out[(v->entree*3)+1]);
-		sem_post(&sem_in_out[(v->entree*3)]);
-		
-		// fin on libere les sémaphores
-		
-		sem_post(&sem_generale);
-		
-		printf("Voiture id:%d, sort  carrefour !\n", v->id);
-		
-		break;
-	}
-	case GAUCHE:
-	{
-		
-		// bloque l'accès au sémaphores.
-		sem_wait(&sem_generale);
-		
-		// v->entree numéro de l'entrée
-		
-		// bloque toute les sémaphores
-		sem_wait(&sem_in_out[(v->entree*3)]);   // la sienne vers gauche
-		sem_wait(&sem_in_out[(v->entree*3)+1]); // la sienne vers en face.
-		sem_wait(&sem_in_out[(v->entree*3)+2]); // la sienne vers droite.
-		
-		
-		sem_wait(&sem_in_out[((v->entree*3)+3)%12]);
-		sem_wait(&sem_in_out[((v->entree*3)+4)%12]); // ceux qui viennent de sa droite
-		
-		sem_wait(&sem_in_out[((v->entree*3)+6)%12]); // ceux qui viennent d'en face
-		sem_wait(&sem_in_out[((v->entree*3)+7)%12]);
-		sem_wait(&sem_in_out[((v->entree*3)+8)%12]);
-		
-		sem_wait(&sem_in_out[((v->entree*3)+9)%12]);
-		sem_wait(&sem_in_out[((v->entree*3)+10)%12]); // ceux qui viennent de sa gauche
-		sem_post(&sem_generale);
-		
-		sleep(2);
-		
-		printf("Voiture id:%d, passe le carrefour !\n", v->id);
-		
-		sem_wait(&sem_generale);
-		// libere le carrefour
-		sem_post(&sem_in_out[((v->entree*3)+10)%12]);
-		sem_post(&sem_in_out[((v->entree*3)+9)%12]);
-		
-		sem_post(&sem_in_out[((v->entree*3)+8)%12]);
-		sem_post(&sem_in_out[((v->entree*3)+7)%12]);
-		sem_post(&sem_in_out[((v->entree*3)+6)%12]);
-		
-		sem_post(&sem_in_out[((v->entree*3)+4)%12]);
-		sem_post(&sem_in_out[((v->entree*3)+3)%12]);
-		
-		sem_post(&sem_in_out[(v->entree*3)+2]);
-		sem_post(&sem_in_out[(v->entree*3)+1]);
-		sem_post(&sem_in_out[(v->entree*3)]);
-		
-		// fin on libere les sémaphores
-		
-		sem_post(&sem_generale);
-		
-		break;
-	}
-	}
-	
+			break;
+		}
+	}	
 	free(v1);
 	
 	pthread_exit(0);
@@ -264,6 +328,51 @@ void traitement(mess* v1)
 
 
 
+
+
+int creerSem(int clef){
+	int semid = semget(clef, 1, IPC_CREAT | IPC_EXCL | 0666);
+	return semid;
+}
+
+void initSem(int id, int valeur){
+	semctl(id, 0, SETVAL, valeur); 
+}
+
+int PSem(int id){
+	sembuf op;
+     
+	op.sem_num = 0; //Numéro de notre sémaphore
+	op.sem_op = -1; //Pour un P() on décrémente
+	op.sem_flg = 0; //On ne s'en occupe pas
+
+	sleep(1);
+
+    return semop(id, &op, 1); //Entrée dans la section critique P()
+}
+
+int VSem(int id){
+	sembuf op;
+     
+	op.sem_num = 0; //Numéro de notre sémaphore
+	op.sem_op = 1; //Pour un V() on incrémente
+	op.sem_flg = 0; //On ne s'en occupe pas
+
+    semop(id, &op, 1); //Sortie de la section critique V()
+}
+
+void destructionSem(int id){
+    semctl(id, 0, IPC_RMID, 0); //Destruction du sémaphore
+}
+
+void afficheEtatSem(){
+	int i;
+	printf("Etat des sémaphores");
+	for(i = 0; i<4; i++){
+		printf("%d : %d\t",i,sem_in_out[i]);
+	}
+	printf("\n");
+}
 
 
 
