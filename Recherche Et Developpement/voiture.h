@@ -7,10 +7,12 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <sys/sem.h>
+#define ID_PROJET 'P'
 
 
 
-int sem_in_out[4];
+
+long sem_in_out[6][6];
 
 enum
 {
@@ -54,14 +56,13 @@ typedef struct
 } sembuf;
 
 
-int creerSem(int clef);
-
+/*int creerSem(int clef);
 void initSem(int id, int valeur);
-
 int PSem(int id);
-
 int VSem(int id);
-
-void destructionSem(int id);
-
+void destructionSem();
 void afficheEtatSem();
+
+void tourneDroite(int entreeVoiture);
+void enFace(int entreeVoiture);
+void tourneGauche(int entreeVoiture);*/	
