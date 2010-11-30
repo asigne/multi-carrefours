@@ -13,33 +13,34 @@
 
 
 long sem_in_out[6][6];
+int msgid[4];
+pid_t pidCarrefour[4];
+pid_t pidVoiture[100];
 
 enum
 {
-	DROITE = 0,
-	EN_FACE,
-	GAUCHE
+	DROITE =1,	//1
+	EN_FACE,	//2
+	GAUCHE		//3
 };
 
 enum
 {
-	OUEST = 0,
-	SUD,
-	EST,
-	NORD
+	OUEST = 1, 	//1
+	SUD,		//2
+	EST,		//3
+	NORD		//4
 };
 
 
-typedef struct 
-{
+typedef struct {
 	int id;
 	int entree;
 	int sortie;
 } voiture;
 
 
-typedef struct 
-{
+typedef struct {
 	long type;
 	voiture car;
 } mess;
@@ -48,8 +49,7 @@ void traitement(mess*);
 
 
 
-typedef struct
-{
+typedef struct{
 	short sem_num;
 	short sem_op;
 	short sem_flg;

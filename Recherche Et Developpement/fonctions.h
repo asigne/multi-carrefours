@@ -15,7 +15,6 @@ int PSem(int id){
 	op.sem_num = 0; //Numéro de notre sémaphore
 	op.sem_op = -1; //Pour un P() on décrémente
 	op.sem_flg = 0; //On ne s'en occupe pas
-	sleep(1);
     return semop(id, &op, 1); //Entrée dans la section critique P()
 }
 
@@ -54,7 +53,7 @@ void afficheEtatSem(){
 
 void tourneDroite(voiture v){
 int ligne,colonne;
-	switch (v.entree){
+		switch (v.entree){
 		case OUEST:	
 		{				
 			ligne=5;
@@ -82,13 +81,21 @@ int ligne,colonne;
 	}
 	PSem(sem_in_out[ligne][colonne]);
 	printf("%d P %d, %d\n",v.id, ligne, colonne);
-	printf("envoie voiture dans le tube correspondant\n");		
+	//printf("envoie voiture dans le tube correspondant\n");		
 	VSem(sem_in_out[ligne][colonne]);
 	printf("%d V %d, %d\n",v.id, ligne, colonne);	
 }
 
 void enFace(voiture v){
-int lDeb, lFin, cDeb, cFin, k;
+	int lDeb, lFin, cDeb, cFin, k;
+
+	//a voir 
+	mess m;
+	m.car.id = v.id;
+	m.car.sortie = v.sortie; //sortie donnee par le serveur-controleur (numero msgid)
+	m.car.entree = v.entree;
+	m.type = 1;	
+
 	switch (v.entree){
 		case OUEST:	
 		{				
@@ -137,7 +144,9 @@ int lDeb, lFin, cDeb, cFin, k;
 			VSem(sem_in_out[lDeb][C-1*k]);
 			printf("%d V %d, %d\n",v.id, lDeb, C-1*k);				
 		}
-		printf("envoie voiture dans le tube correspondant\n");		
+
+		//printf("envoie voiture dans le tube correspondant\n");		
+
 		VSem(sem_in_out[lFin][cFin]);
 		printf("%d V %d, %d\n",v.id, lFin, cFin);
 	}
@@ -151,7 +160,7 @@ int lDeb, lFin, cDeb, cFin, k;
 			VSem(sem_in_out[L-1*k][cFin]);
 			printf("%d V %d, %d\n",v.id, L-1*k, cFin);
 		}
-		printf("envoie voiture dans le tube correspondant\n");		
+		//printf("envoie voiture dans le tube correspondant\n");		
 		VSem(sem_in_out[lFin][cFin]);
 		printf("%d V %d, %d\n",v.id, lFin, cFin);
 	}
@@ -159,6 +168,7 @@ int lDeb, lFin, cDeb, cFin, k;
 
 void tourneGauche(voiture v){
 	int lDeb, lFin, cDeb, cFin, k, m;
+	int noFileMessage=-1;
 	switch (v.entree){
 		case OUEST:	
 		{				
@@ -220,7 +230,7 @@ void tourneGauche(voiture v){
 			printf("%d V %d, %d\n",v.id, L-1*m, cFin);
 		}
 		//envoie dans tube
-		printf("envoie voiture dans le tube correspondant\n");		
+		//printf("envoie voiture dans le tube correspondant\n");		
 		VSem(sem_in_out[lFin][cFin]);
 		printf("%d V %d, %d\n",v.id, lFin, cFin);
 	}
@@ -243,10 +253,87 @@ void tourneGauche(voiture v){
 		}
 
 		//envoie dans tube
-		printf("envoie voiture dans le tube correspondant\n");		
+		//printf("envoie voiture dans le tube correspondant\n");		
 		VSem(sem_in_out[lFin][cFin]);
 		printf("%d V %d, %d\n",v.id, lFin, cFin);
 	}
+}
+
+void traitement(mess* message)
+{
+	voiture* v = &(message->car);
+
+	//modification sortie par le serveur-controleur
+
+	switch(v->sortie-v->entree) //difference entre le numero de la sortie de celui de l'entrée
+	{
+		// v->entree numéro de l'entrée
+		case 1: //tourne a droite
+		{
+		//	printf("Entree dans le carrefour voiture %d par l'entree %d.\n", v->id, v->entree);			
+			tourneDroite(*v);
+			printf("Voiture id:%d, sort  carrefour !\n", v->id);
+			break;
+		}
+		case 2: //va en face
+		{
+		//	printf("Entree dans le carrefour voiture %d par l'entree %d.\n", v->id, v->entree);
+			enFace(*v);
+			printf("Voiture id:%d, sort  carrefour !\n", v->id);
+			break;
+		}
+		case 3: //tourne a gauche
+		{
+		//	printf("Entree dans le carrefour voiture %d par l'entree %d.\n", v->id, v->entree);
+			tourneGauche(*v);
+			printf("Voiture id:%d, sort  carrefour !\n", v->id);
+			break;
+		}
+	}	
+	pthread_exit(0);
+}
+
+
+
+
+
+
+void gestionCarrefour(int numCarrefour){
+	int ligne,colonne;
+	key_t clef;
+	int semid,cpt=0;
+	pthread_t thread_traitement[3];
+	mess* tabMess = malloc (3 * sizeof(mess));
+
+	//créer les 36 sémaphores du carrefour
+	for(ligne = 0; ligne<6; ligne++){
+		for(colonne = 0; colonne<6; colonne++){	
+			clef = ftok("test", ID_PROJET+cpt+numCarrefour*100); //verifier unicité des clefs générée
+			sem_in_out[ligne][colonne]=creerSem(clef);
+			initSem(sem_in_out[ligne][colonne], 1);
+			cpt++;		
+		}
+	}
+
+	while(1){
+		//allocation mess
+		mess* mTemp = (mess*) malloc(sizeof(mess));
+
+		// attente voiture
+		//printf("Attente de voiture carrefour numero:%d...\n",numCarrefour);
+		//reception voiture
+		msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), 0, 0);
+		int indice=(mTemp->car.sortie)-(mTemp->car.entree)-1;
+		tabMess[indice].car=mTemp->car;
+		tabMess[indice].type=mTemp->type;
+	//	printf("voiture recue carrefour numero:%d...\n",numCarrefour);
+		//thread traiter voiture.
+		pthread_create(&thread_traitement[indice], NULL, (void * (*)(void *))traitement, &tabMess[indice]);		
+		//liberation mess
+		free(mTemp);
+	}
+	//destruction semaphores du carrefour
+	destructionSem();
 }
 
 
