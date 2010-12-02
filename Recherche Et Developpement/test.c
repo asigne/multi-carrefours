@@ -1,14 +1,41 @@
 #include "fonctions.h"
-
-
-
 int main(int argc, char **argv)
 {
 	int i;
+
 	msgid[0]= msgget(666, IPC_CREAT | IPC_EXCL | 0666);
 	msgid[1]= msgget(667, IPC_CREAT | IPC_EXCL | 0666);
 	msgid[2]= msgget(668, IPC_CREAT | IPC_EXCL | 0666);
 	msgid[3]= msgget(669, IPC_CREAT | IPC_EXCL | 0666);
+
+	msgidServeurControleur=msgget(777, IPC_CREAT | IPC_EXCL | 0666);
+
+	idMemPartagee[0]=shmget(886, 4*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
+	idMemPartagee[1]=shmget(887, 4*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
+	idMemPartagee[2]=shmget(888, 4*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
+	idMemPartagee[3]=shmget(889, 4*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
+
+//	int* memoiresPartagees[4];
+	for(i=0;i<4;i++){
+		memoiresPartagees[i]=(int*) shmat(idMemPartagee[i], NULL, NULL);
+	}
+
+	//initialisation des compteurs de chaque voie
+	int carrefour, numVoie;
+	for(carrefour = 0; carrefour<4; carrefour++){
+		for(numVoie = 0; numVoie<4; numVoie++){
+			memoiresPartagees[carrefour][numVoie]=0;
+		}
+	}
+
+	//affichage des compteurs de chaque voie
+	/*for(carrefour = 0; carrefour<4; carrefour++){
+		printf("Etat du carrefour %d\n",carrefour);		
+		for(numVoie = 0; numVoie<4; numVoie++){	
+			printf("Voie numero %d : %d\n",numVoie+1, memoiresPartagees[carrefour][numVoie]);		
+		}
+		printf("\n");
+	}*/
 
 
 	int numCarrefour,ligne,clef,colonne;
@@ -25,15 +52,20 @@ int main(int argc, char **argv)
 		cpt=1;		
 	}
 
-
-
 	pid_t pidPere=getpid();
+
+
 	for(i=0;i<4;i++){
 		if(getpid()==pidPere){
 			//printf("Creation du fils numero %d\n",i);
 			pidCarrefour[i] = fork();
 		}
 	}
+	//creation serveur controleur
+	if(getpid()==pidPere){
+		pidServeurControleur = fork();
+	}	
+
 
 	if(pidCarrefour[0] == 0){
 		// processus gérant le carrefour 0 (NORD-OUEST)
@@ -59,13 +91,30 @@ int main(int argc, char **argv)
 		//printf("Mort du fils 3...\n");		
 		exit(0);		
 	}
+	else if(pidServeurControleur == 0){
+		// processus gérantle serveur controleur
+		char buf[5][15];
+		sprintf(buf[0], "%d", msgidServeurControleur);
+
+		sprintf(buf[1], "%d", idMemPartagee[0]);
+		sprintf(buf[2], "%d", idMemPartagee[1]);
+		sprintf(buf[3], "%d", idMemPartagee[2]);
+		sprintf(buf[4], "%d", idMemPartagee[3]);
+
+
+		execl("serveurControleur","serveurControleur", buf[0], buf[1], buf[2], buf[3], buf[4], NULL);
+		printf("Mort du serveur controleur...\n");		
+		exit(0);	
+	}
 	else{
 		// pere
 		mess m1;
 		m1.car.id = 1;		 
+		m1.car.numCarrefour = 0; 
 		m1.car.entree = NORD;
-		m1.car.sortie = EST;   
-		m1.car.numCarrefour = 0;   
+		m1.car.numCarrefourFinal = 3;
+		m1.car.sortieFinale = EST;  
+  		m1.car.sortie = EST; 
 		m1.type = 1;
 	
 		mess m2;
@@ -102,8 +151,14 @@ int main(int argc, char **argv)
 
 		
 		
-		msgsnd(msgid[0], &m2, sizeof(mess) - sizeof(long), 0);
+	//	msgsnd(msgid[0], &m2, sizeof(mess) - sizeof(long), 0);
+
+
 		msgsnd(msgid[0], &m1, sizeof(mess) - sizeof(long), 0);	
+		memoiresPartagees[m1.car.numCarrefour][m1.car.entree-1]++;
+
+
+
 	//	msgsnd(msgid[0], &m3, sizeof(mess) - sizeof(long), 0);
 	//	msgsnd(msgid[0], &m4, sizeof(mess) - sizeof(long), 0);	
 	//	msgsnd(msgid[0], &m5, sizeof(mess) - sizeof(long), 0);

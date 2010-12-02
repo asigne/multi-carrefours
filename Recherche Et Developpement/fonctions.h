@@ -297,15 +297,19 @@ void traitement(mess* message)
 			switch(message->car.sortie){
 			case OUEST:
 				printf("Sortie de la voiture %d par la sortie OUEST du carrefour 0\n",message->car.id);
+				messageAEnvoyer.car.entree=EST;				
 				break;
 			case SUD:
 				numCarrefourSvt=2;
+				messageAEnvoyer.car.entree=NORD;
 				break;
 			case EST:
 				numCarrefourSvt=1;
+				messageAEnvoyer.car.entree=OUEST;
 				break;
 			case NORD:
 				printf("Sortie de la voiture %d par la sortie NORD du carrefour 0\n",message->car.id);
+				messageAEnvoyer.car.entree=SUD;
 				break;
 			}
 			break;
@@ -315,15 +319,19 @@ void traitement(mess* message)
 			switch(message->car.sortie){
 			case OUEST:
 				numCarrefourSvt=0;
+				messageAEnvoyer.car.entree=EST;
 				break;
 			case SUD:
 				numCarrefourSvt=3;
+				messageAEnvoyer.car.entree=NORD;
 				break;
 			case EST:
 				printf("Sortie de la voiture %d par la sortie EST du carrefour 1\n",message->car.id);
+				messageAEnvoyer.car.entree=OUEST;
 				break;
 			case NORD:
 				printf("Sortie de la voiture %d par la sortie NORD du carrefour 1\n",message->car.id);
+				messageAEnvoyer.car.entree=SUD;
 				break;
 			}
 			break;	
@@ -333,15 +341,19 @@ void traitement(mess* message)
 			switch(message->car.sortie){
 			case OUEST:
 				printf("Sortie de la voiture %d par la sortie OUEST du carrefour 2\n",message->car.id);
+				messageAEnvoyer.car.entree=EST;
 				break;
 			case SUD:
 				printf("Sortie de la voiture %d par la sortie SUD du carrefour 2\n",message->car.id);
+				messageAEnvoyer.car.entree=NORD;
 				break;
 			case EST:
-				numCarrefourSvt=3;				
+				numCarrefourSvt=3;
+				messageAEnvoyer.car.entree=OUEST;				
 				break;
 			case NORD:
-				numCarrefourSvt=0;		
+				numCarrefourSvt=0;
+				messageAEnvoyer.car.entree=SUD;		
 				break;
 			}
 			break;
@@ -351,26 +363,44 @@ void traitement(mess* message)
 	switch(message->car.sortie){
 			case OUEST:
 				numCarrefourSvt=2;		
+				messageAEnvoyer.car.entree=EST;		
 				break;
 			case SUD:
 				printf("Sortie de la voiture %d par la sortie SUD du carrefour 3\n",message->car.id);
+				messageAEnvoyer.car.entree=NORD;		
 				break;
 			case EST:
-				printf("Sortie de la voiture %d par la sortie EST du carrefour 3\n",message->car.id);		
+				printf("Sortie de la voiture %d par la sortie EST du carrefour 3\n",message->car.id);	
+				messageAEnvoyer.car.entree=OUEST;			
 				break;
 			case NORD:
 				numCarrefourSvt=1;		
+				messageAEnvoyer.car.entree=SUD;		
 				break;
 			}
 			break;
 		}
 	}
 
+
+
+
 	//ecriture file message carrefour correspondant
 	if(numCarrefourSvt!=-1){
 		messageAEnvoyer.car.numCarrefour=numCarrefourSvt;
 		msgsnd(msgid[numCarrefourSvt], &messageAEnvoyer, sizeof(mess) - sizeof(long), 0);
+		memoiresPartagees[messageAEnvoyer.car.numCarrefour][messageAEnvoyer.car.entree-1]++;
 	}
+
+		int carrefour, numVoie;	
+		for(carrefour = 0; carrefour<4; carrefour++){
+			printf("Etat du carrefour %d\n",carrefour);		
+			for(numVoie = 0; numVoie<4; numVoie++){	
+				printf("Voie numero %d : %d\n",numVoie+1, memoiresPartagees[carrefour][numVoie]);		
+			}
+			printf("\n");
+		}
+
 	free(message);	
 	pthread_exit(0);
 }
@@ -384,6 +414,12 @@ void gestionCarrefour(int numCarrefour){
 	int ligne,colonne;
 	pthread_t thread_traitement[4];
 
+	//int* memoiresPartagees[4];
+	int i;
+	for(i=0;i<4;i++){
+		memoiresPartagees[i]=(int*) shmat(idMemPartagee[i], NULL, NULL);
+	}
+
 	while(1){
 		//allocation mess
 		mess* mTemp = (mess*) malloc(sizeof(mess));
@@ -391,7 +427,14 @@ void gestionCarrefour(int numCarrefour){
 		// attente voiture
 		printf("Attente de voiture carrefour numero %d...\n",numCarrefour);
 		//reception voiture
+	
+
+
 		int retour1=msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), 0, 0);
+
+		//decrementation
+		memoiresPartagees[mTemp->car.numCarrefour][mTemp->car.entree-1]--;
+	
 		int indice=(mTemp->car.entree)-1;
 		//printf("indice thread %d",indice);
 		printf("voiture %d recue carrefour numero %d ...\n",mTemp->car.id, numCarrefour);

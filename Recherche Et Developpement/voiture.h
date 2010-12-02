@@ -11,8 +11,15 @@
 
 static int sem_in_out[4][2][2];
 int msgid[4];
+int idMemPartagee[4];
+
+int* memoiresPartagees[4];
+
 pid_t pidCarrefour[4];
-pid_t pidVoiture[100];
+pid_t pidServeurControleur;
+int msgidServeurControleur;
+
+
 
 enum
 {
@@ -34,6 +41,8 @@ typedef struct {
 	int id;
 	int entree;
 	int sortie;
+	int sortieFinale;
+	int numCarrefourFinal;
 	int numCarrefour;
 } voiture;
 
