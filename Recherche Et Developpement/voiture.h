@@ -9,10 +9,7 @@
 #include <sys/sem.h>
 #define ID_PROJET 'P'
 
-
-
-
-long sem_in_out[6][6];
+static int sem_in_out[4][2][2];
 int msgid[4];
 pid_t pidCarrefour[4];
 pid_t pidVoiture[100];
@@ -37,6 +34,7 @@ typedef struct {
 	int id;
 	int entree;
 	int sortie;
+	int numCarrefour;
 } voiture;
 
 
