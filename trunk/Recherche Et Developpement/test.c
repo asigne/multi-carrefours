@@ -64,13 +64,15 @@ int main(int argc, char **argv)
 		mess m1;
 		m1.car.id = 1;		 
 		m1.car.entree = NORD;
-		m1.car.sortie = SUD;   
+		m1.car.sortie = EST;   
+		m1.car.numCarrefour = 0;   
 		m1.type = 1;
 	
 		mess m2;
 		m2.car.id = 2;
 		m2.car.entree = NORD;
-		m2.car.sortie = OUEST;
+		m2.car.sortie = SUD;
+		m2.car.numCarrefour = 0;
 		m2.type = 1;
 		
 		mess m3;
@@ -115,7 +117,7 @@ int main(int argc, char **argv)
 
 		//sleep(5);
 
-		afficheEtatSem();
+		//afficheEtatSem();
 
 		
 		waitpid(pidCarrefour[0], NULL, NULL);
