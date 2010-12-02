@@ -1,7 +1,7 @@
 #include "voiture.h"
 
-int creerSem(int clef){
-	int semid = semget(clef, 1, IPC_CREAT | IPC_EXCL | 0666);
+int creerSem(int clef, int nombre){
+	int semid = semget(clef, nombre, IPC_CREAT | IPC_EXCL | 0666);
 	return semid;
 }
 
@@ -10,16 +10,17 @@ void initSem(int id, int valeur){
 }
 
 int PSem(int id){
-	sembuf op;
+	struct sembuf op;
      
 	op.sem_num = 0; //Numéro de notre sémaphore
 	op.sem_op = -1; //Pour un P() on décrémente
 	op.sem_flg = 0; //On ne s'en occupe pas
+	usleep(500);
     return semop(id, &op, 1); //Entrée dans la section critique P()
 }
 
 int VSem(int id){
-	sembuf op;
+	struct sembuf op;
      
 	op.sem_num = 0; //Numéro de notre sémaphore
 	op.sem_op = 1; //Pour un V() on incrémente
@@ -29,23 +30,29 @@ int VSem(int id){
 }
 
 void destructionSem(){
-	int ligne,colonne;
+	int ligne,colonne,numCarrefour;
 	 //Destruction du sémaphore
-	for(ligne = 0; ligne<6; ligne++){
-		for(colonne = 0; colonne<6; colonne++){	
-			semctl(sem_in_out[ligne][colonne], 0, IPC_RMID, 0);		
+	for(numCarrefour = 0; numCarrefour<4; numCarrefour++){
+		for(ligne = 0; ligne<2; ligne++){
+			for(colonne = 0; colonne<2; colonne++){	
+				semctl(sem_in_out[numCarrefour][ligne][colonne], 0, IPC_RMID, 0);		
+			}
 		}
 	}
 }
 
 void afficheEtatSem(){
-	int ligne,colonne;
+	int ligne,colonne,numCarrefour;
 	printf("Etat des sémaphores\n");
-	for(ligne = 0; ligne<6; ligne++){
-		for(colonne = 0; colonne<6; colonne++){	
-			printf("%lld\t",sem_in_out[ligne][colonne]);
+	for(numCarrefour = 0; numCarrefour<4; numCarrefour++){
+		for(ligne = 0; ligne<2; ligne++){
+			for(colonne = 0; colonne<2; colonne++){	
+				//printf("%lld\t",sem_in_out[numCarrefour][ligne][colonne]);
+				printf("%d \t%d\t",sem_in_out[numCarrefour][ligne][colonne], semctl(sem_in_out[numCarrefour][ligne][colonne], 0, GETVAL, 0));		
+			}
+			printf("\n");
 		}
-		printf("\n");
+		printf("\n\n");
 	}
 	printf("\n");
 }
@@ -53,23 +60,24 @@ void afficheEtatSem(){
 
 void tourneDroite(voiture v){
 int ligne,colonne;
+int numCarrefour=v.numCarrefour;
 		switch (v.entree){
 		case OUEST:	
 		{				
-			ligne=5;
+			ligne=1;
 			colonne=0;
 			break;
 		}
 		case SUD:	
 		{			
-			ligne=5;
-			colonne=5;
+			ligne=1;
+			colonne=1;
 			break;
 		}
 		case EST:	
 		{				
 			ligne=0;
-			colonne=5;
+			colonne=1;
 			break;
 		}
 		case NORD:	
@@ -79,47 +87,48 @@ int ligne,colonne;
 			break;
 		}
 	}
-	PSem(sem_in_out[ligne][colonne]);
+	PSem(sem_in_out[numCarrefour][ligne][colonne]);
 	printf("%d P %d, %d\n",v.id, ligne, colonne);
 	//printf("envoie voiture dans le tube correspondant\n");		
-	VSem(sem_in_out[ligne][colonne]);
+	VSem(sem_in_out[numCarrefour][ligne][colonne]);
 	printf("%d V %d, %d\n",v.id, ligne, colonne);	
 }
 
 void enFace(voiture v){
 	int lDeb, lFin, cDeb, cFin, k;
+	int numCarrefour=v.numCarrefour;
 
 	//a voir 
 	mess m;
 	m.car.id = v.id;
 	m.car.sortie = v.sortie; //sortie donnee par le serveur-controleur (numero msgid)
 	m.car.entree = v.entree;
-	m.type = 1;	
+	//m.type = 1;	
 
 	switch (v.entree){
 		case OUEST:	
 		{				
-			lDeb=4;
-			lFin=4;
+			lDeb=1;
+			lFin=1;
 			cDeb=0;
-			cFin=5;
+			cFin=1;
 			k=1;
 			break;
 		}
 		case SUD:	
 		{			
-			lDeb=5;
+			lDeb=1;
 			lFin=0;
-			cDeb=4;
-			cFin=4;
+			cDeb=1;
+			cFin=1;
 			k=-1;
 			break;
 		}
 		case EST:	
 		{				
-			lDeb=1;
-			lFin=1;
-			cDeb=5;
+			lDeb=0;
+			lFin=0;
+			cDeb=1;
 			cFin=0;
 			k=-1;
 			break;
@@ -127,64 +136,66 @@ void enFace(voiture v){
 		case NORD:	
 		{				
 			lDeb=0;
-			lFin=5;
-			cDeb=1;
-			cFin=1;
+			lFin=1;
+			cDeb=0;
+			cFin=0;
 			k=1;
 			break;
 		}
 	}
 	if(lDeb==lFin){
 		int C, L;
-		PSem(sem_in_out[lDeb][cDeb]);
+		PSem(sem_in_out[numCarrefour][lDeb][cDeb]);
 			printf("%d P %d, %d\n",v.id, lDeb, cDeb);
+		afficheEtatSem();
 		for(C=cDeb+1*k;C*k<=cFin*k;C=C+k){
-			PSem(sem_in_out[lDeb][C]);
+			PSem(sem_in_out[numCarrefour][lDeb][C]);
 			printf("%d P %d, %d\n",v.id, lDeb, C);
-			VSem(sem_in_out[lDeb][C-1*k]);
-			printf("%d V %d, %d\n",v.id, lDeb, C-1*k);				
+afficheEtatSem();		
+			VSem(sem_in_out[numCarrefour][lDeb][C-1*k]);
+			printf("%d V %d, %d\n",v.id, lDeb, C-1*k);		afficheEtatSem();		
 		}
 
 		//printf("envoie voiture dans le tube correspondant\n");		
 
-		VSem(sem_in_out[lFin][cFin]);
-		printf("%d V %d, %d\n",v.id, lFin, cFin);
+		VSem(sem_in_out[numCarrefour][lFin][cFin]);
+		printf("%d V %d, %d\n",v.id, lFin, cFin);afficheEtatSem();
 	}
 	else{	
 		int C, L;
-		PSem(sem_in_out[lDeb][cDeb]);
-			printf("%d P %d, %d\n",v.id, lDeb, cDeb);
+		PSem(sem_in_out[numCarrefour][lDeb][cDeb]);
+			printf("%d P %d, %d\n",v.id, lDeb, cDeb);afficheEtatSem();
 		for(L=lDeb+1*k;L*k<=lFin*k;L=L+k){
-			PSem(sem_in_out[L][cFin]);
-			printf("%d P %d, %d\n",v.id, L, cFin);
-			VSem(sem_in_out[L-1*k][cFin]);
-			printf("%d V %d, %d\n",v.id, L-1*k, cFin);
+			PSem(sem_in_out[numCarrefour][L][cFin]);
+			printf("%d P %d, %d\n",v.id, L, cFin);afficheEtatSem();
+			VSem(sem_in_out[numCarrefour][L-1*k][cFin]);
+			printf("%d V %d, %d\n",v.id, L-1*k, cFin);afficheEtatSem();
 		}
 		//printf("envoie voiture dans le tube correspondant\n");		
-		VSem(sem_in_out[lFin][cFin]);
-		printf("%d V %d, %d\n",v.id, lFin, cFin);
+		VSem(sem_in_out[numCarrefour][lFin][cFin]);
+		printf("%d V %d, %d\n",v.id, lFin, cFin);afficheEtatSem();
 	}
 }
 
 void tourneGauche(voiture v){
 	int lDeb, lFin, cDeb, cFin, k, m;
-	int noFileMessage=-1;
+	int numCarrefour=v.numCarrefour;
 	switch (v.entree){
 		case OUEST:	
 		{				
-			lDeb=3;
+			lDeb=1;
 			lFin=0;
 			cDeb=0;
-			cFin=3;
+			cFin=1;
 			k=1;
 			m=-1;
 			break;
 		}
 		case SUD:	
 		{			
-			lDeb=5;
-			lFin=2;
-			cDeb=3;
+			lDeb=1;
+			lFin=0;
+			cDeb=1;
 			cFin=0;
 			k=-1;
 			m=-1;
@@ -192,10 +203,10 @@ void tourneGauche(voiture v){
 		}
 		case EST:	
 		{				
-			lDeb=2;
-			lFin=5;
-			cDeb=5;
-			cFin=2;
+			lDeb=0;
+			lFin=1;
+			cDeb=1;
+			cFin=0;
 			k=-1;
 			m=1;
 			break;
@@ -203,9 +214,9 @@ void tourneGauche(voiture v){
 		case NORD:	
 		{				
 			lDeb=0;
-			lFin=3;
-			cDeb=2;
-			cFin=5;
+			lFin=1;
+			cDeb=0;
+			cFin=1;
 			k=1;
 			m=1;
 			break;
@@ -214,82 +225,157 @@ void tourneGauche(voiture v){
 
 	if(k!=m){
 		int C, L;
-		PSem(sem_in_out[lDeb][cDeb]);
-			printf("%d P %d, %d\n",v.id, lDeb, cDeb);
+		PSem(sem_in_out[numCarrefour][lDeb][cDeb]);
+			printf("%d P %d, %d\n",v.id, lDeb, cDeb); afficheEtatSem();
+		sleep(2);
 		for(C=cDeb+1*k;C*k<=cFin*k;C=C+k){
-			PSem(sem_in_out[lDeb][C]);
-			printf("%d P %d, %d\n",v.id, lDeb, C);
-			VSem(sem_in_out[lDeb][C-1*k]);
-			printf("%d V %d, %d\n",v.id, lDeb, C-1*k);				
+			PSem(sem_in_out[numCarrefour][lDeb][C]);
+			printf("%d P %d, %d\n",v.id, lDeb, C);afficheEtatSem();
+			VSem(sem_in_out[numCarrefour][lDeb][C-1*k]);
+			printf("%d V %d, %d\n",v.id, lDeb, C-1*k);		afficheEtatSem();		
 		}
 		
 		for(L=lDeb+1*m;L*m<=lFin*m;L=L+m){
-			PSem(sem_in_out[L][cFin]);
-			printf("%d P %d, %d\n",v.id, L, cFin);
-			VSem(sem_in_out[L-1*m][cFin]);
-			printf("%d V %d, %d\n",v.id, L-1*m, cFin);
+			PSem(sem_in_out[numCarrefour][L][cFin]);
+			printf("%d P %d, %d\n",v.id, L, cFin);afficheEtatSem();
+			VSem(sem_in_out[numCarrefour][L-1*m][cFin]);
+			printf("%d V %d, %d\n",v.id, L-1*m, cFin);afficheEtatSem();
 		}
 		//envoie dans tube
 		//printf("envoie voiture dans le tube correspondant\n");		
-		VSem(sem_in_out[lFin][cFin]);
-		printf("%d V %d, %d\n",v.id, lFin, cFin);
+		VSem(sem_in_out[numCarrefour][lFin][cFin]);
+		printf("%d V %d, %d\n",v.id, lFin, cFin);afficheEtatSem();
 	}
 	else{	
 		int C, L;
-		PSem(sem_in_out[lDeb][cDeb]);
-		printf("%d P %d, %d\n",v.id, lDeb, cDeb);
+		PSem(sem_in_out[numCarrefour][lDeb][cDeb]);
+		printf("%d P %d, %d\n",v.id, lDeb, cDeb);afficheEtatSem();
 
 		for(L=lDeb+1*m;L*m<=lFin*m;L=L+m){
-			PSem(sem_in_out[L][cDeb]);
-			printf("%d P %d, %d\n",v.id, L, cDeb);
-			VSem(sem_in_out[L-1*m][cDeb]);
-			printf("%d V %d, %d\n",v.id, L-1*m, cDeb);
+			PSem(sem_in_out[numCarrefour][L][cDeb]);
+			printf("%d P %d, %d\n",v.id, L, cDeb); afficheEtatSem();
+			VSem(sem_in_out[numCarrefour][L-1*m][cDeb]);
+			printf("%d V %d, %d\n",v.id, L-1*m, cDeb);afficheEtatSem();
 		}
 		for(C=cDeb+1*k;C*k<=cFin*k;C=C+k){
-			PSem(sem_in_out[lFin][C]);
-			printf("%d P %d, %d\n",v.id, lFin, C);
-			VSem(sem_in_out[lFin][C-1*k]);
-			printf("%d V %d, %d\n",v.id, lFin, C-1*k);				
+			PSem(sem_in_out[numCarrefour][lFin][C]);
+			printf("%d P %d, %d\n",v.id, lFin, C);afficheEtatSem();
+			VSem(sem_in_out[numCarrefour][lFin][C-1*k]);
+			printf("%d V %d, %d\n",v.id, lFin, C-1*k);	afficheEtatSem();			
 		}
 
 		//envoie dans tube
 		//printf("envoie voiture dans le tube correspondant\n");		
-		VSem(sem_in_out[lFin][cFin]);
+		VSem(sem_in_out[numCarrefour][lFin][cFin]);
 		printf("%d V %d, %d\n",v.id, lFin, cFin);
 	}
 }
 
 void traitement(mess* message)
 {
-	voiture* v = &(message->car);
+	int numCarrefourSvt=-1;
+	mess messageAEnvoyer;
+	messageAEnvoyer.type=message->type;
+	messageAEnvoyer.car=message->car;
 
 	//modification sortie par le serveur-controleur
 
-	switch(v->sortie-v->entree) //difference entre le numero de la sortie de celui de l'entrée
-	{
-		// v->entree numéro de l'entrée
-		case 1: //tourne a droite
+	//message->car.sortie=nouvelleSortie;
+	
+
+	printf("Entree dans le carrefour voiture %d par l'entree %d.\n", message->car.id, message->car.entree);
+	int destination = message->car.entree - message->car.sortie;
+	if(destination==-1 || destination==3){
+		tourneDroite(message->car);
+	}
+	else if(destination==-2 || destination==2){
+		enFace(message->car);
+	}
+	else if(destination==-3 || destination==1){
+		tourneGauche(message->car);
+	}
+	else{
+		printf("ERREUR: demi tour impossible\n");
+	}
+	printf("Voiture id:%d, sort  carrefour par la sortie %d!\n", message->car.id, message->car.sortie);
+
+
+	switch(message->car.numCarrefour){
+		case 0:
 		{
-		//	printf("Entree dans le carrefour voiture %d par l'entree %d.\n", v->id, v->entree);			
-			tourneDroite(*v);
-			printf("Voiture id:%d, sort  carrefour !\n", v->id);
+			switch(message->car.sortie){
+			case OUEST:
+				printf("Sortie de la voiture %d par la sortie OUEST du carrefour 0\n",message->car.id);
 			break;
+			case SUD:
+				numCarrefourSvt=2;
+			break;
+			case EST:
+				numCarrefourSvt=1;
+			break;
+			case NORD:
+				printf("Sortie de la voiture %d par la sortie NORD du carrefour 0\n",message->car.id);
+			break;
+			}
 		}
-		case 2: //va en face
+		case 1:
 		{
-		//	printf("Entree dans le carrefour voiture %d par l'entree %d.\n", v->id, v->entree);
-			enFace(*v);
-			printf("Voiture id:%d, sort  carrefour !\n", v->id);
+			switch(message->car.sortie){
+			case OUEST:
+				numCarrefourSvt=0;
 			break;
+			case SUD:
+				numCarrefourSvt=3;
+			break;
+			case EST:
+				printf("Sortie de la voiture %d par la sortie EST du carrefour 1\n",message->car.id);
+			break;
+			case NORD:
+				printf("Sortie de la voiture %d par la sortie NORD du carrefour 1\n",message->car.id);
+			break;
+			}
 		}
-		case 3: //tourne a gauche
+		case 2:
 		{
-		//	printf("Entree dans le carrefour voiture %d par l'entree %d.\n", v->id, v->entree);
-			tourneGauche(*v);
-			printf("Voiture id:%d, sort  carrefour !\n", v->id);
+			switch(message->car.sortie){
+			case OUEST:
+				printf("Sortie de la voiture %d par la sortie OUEST du carrefour 2\n",message->car.id);
 			break;
+			case SUD:
+				printf("Sortie de la voiture %d par la sortie SUD du carrefour 2\n",message->car.id);
+			break;
+			case EST:
+				numCarrefourSvt=3;				
+			break;
+			case NORD:
+				numCarrefourSvt=0;		
+			break;
+			}
 		}
-	}	
+		case 3:
+		{
+	switch(message->car.sortie){
+			case OUEST:
+				numCarrefourSvt=2;		
+			break;
+			case SUD:
+				printf("Sortie de la voiture %d par la sortie SUD du carrefour 3\n",message->car.id);
+			break;
+			case EST:
+				printf("Sortie de la voiture %d par la sortie EST du carrefour 3\n",message->car.id);		
+			break;
+			case NORD:
+				numCarrefourSvt=1;		
+			break;
+			}
+		}
+	}
+
+	//ecriture file message carrefour correspondant
+	if(numCarrefourSvt!=-1){
+		msgsnd(msgid[numCarrefourSvt], &messageAEnvoyer, sizeof(mess) - sizeof(long), 0);
+	}
+	free(message);	
 	pthread_exit(0);
 }
 
@@ -301,36 +387,40 @@ void traitement(mess* message)
 void gestionCarrefour(int numCarrefour){
 	int ligne,colonne;
 	key_t clef;
-	int semid,cpt=0;
+	int cpt=1;
 	pthread_t thread_traitement[3];
-	mess* tabMess = malloc (3 * sizeof(mess));
 
-	//créer les 36 sémaphores du carrefour
-	for(ligne = 0; ligne<6; ligne++){
-		for(colonne = 0; colonne<6; colonne++){	
-			clef = ftok("test", ID_PROJET+cpt+numCarrefour*100); //verifier unicité des clefs générée
-			sem_in_out[ligne][colonne]=creerSem(clef);
-			initSem(sem_in_out[ligne][colonne], 1);
+	//créer les 4 sémaphores du carrefour
+	/*for(ligne = 0; ligne<2; ligne++){
+		for(colonne = 0; colonne<2; colonne++){	
+			clef = 999+cpt*(numCarrefour+10);//ftok("test", ID_PROJET+cpt+numCarrefour*100); //verifier unicité des clefs générée
+			sem_in_out[numCarrefour][ligne][colonne]=creerSem(clef, 4);
+			initSem(sem_in_out[numCarrefour][ligne][colonne], 1);
 			cpt++;		
 		}
-	}
+	}*/
+	//afficheEtatSem();
+
 
 	while(1){
 		//allocation mess
 		mess* mTemp = (mess*) malloc(sizeof(mess));
 
 		// attente voiture
-		//printf("Attente de voiture carrefour numero:%d...\n",numCarrefour);
+		printf("Attente de voiture carrefour numero %d...\n",numCarrefour);
 		//reception voiture
-		msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), 0, 0);
-		int indice=(mTemp->car.sortie)-(mTemp->car.entree)-1;
-		tabMess[indice].car=mTemp->car;
-		tabMess[indice].type=mTemp->type;
-	//	printf("voiture recue carrefour numero:%d...\n",numCarrefour);
+		int retour1=msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), 0, 0);
+		int indice=(mTemp->car.entree)-1;
+	
+		//m->car.entree = m->type-1;
+
+		printf("voiture %d recue carrefour numero %d ...\n",mTemp->car.id, numCarrefour);
 		//thread traiter voiture.
-		pthread_create(&thread_traitement[indice], NULL, (void * (*)(void *))traitement, &tabMess[indice]);		
+		int retour=pthread_create(&thread_traitement[indice], NULL, (void * (*)(void *))traitement, mTemp);		
+
+		//printf("retour thread:%d ...\n",retour);
 		//liberation mess
-		free(mTemp);
+		//
 	}
 	//destruction semaphores du carrefour
 	destructionSem();
