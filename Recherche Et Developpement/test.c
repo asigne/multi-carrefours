@@ -10,10 +10,10 @@ int main(int argc, char **argv)
 
 	msgidServeurControleur=msgget(777, IPC_CREAT | IPC_EXCL | 0666);
 
-	idMemPartagee[0]=shmget(886, 4*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
-	idMemPartagee[1]=shmget(887, 4*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
-	idMemPartagee[2]=shmget(888, 4*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
-	idMemPartagee[3]=shmget(889, 4*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
+	idMemPartagee[0]=shmget(886, 8*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
+	idMemPartagee[1]=shmget(887, 8*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
+	idMemPartagee[2]=shmget(888, 8*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
+	idMemPartagee[3]=shmget(889, 8*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
 
 //	int* memoiresPartagees[4];
 	for(i=0;i<4;i++){
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 	}
 	else if(pidCarrefour[1] == 0){
 		// processus gérant le carrefour 1 (NORD-EST)
-		gestionCarrefour(1);
+	//	gestionCarrefour(1);
 		//printf("Mort du fils 1...\n");		
 		exit(0);		
 	}
@@ -115,54 +115,32 @@ int main(int argc, char **argv)
 		m1.car.numCarrefourFinal = 3;
 		m1.car.sortieFinale = EST;  
   		m1.car.sortie = EST; 
-		m1.type = 1;
+		m1.car.prioritaire=FAUX;
+		m1.type = NORD;
 	
 		mess m2;
-		m2.car.id = 2;
-		m2.car.entree = NORD;
-		m2.car.sortie = SUD;
-		m2.car.numCarrefour = 0;
-		m2.type = 1;
-		
-		mess m3;
-		m3.car.id = 3;
-		m3.car.sortie = OUEST;
-		m3.car.entree = NORD;
-		m3.type = 1;
-
-		mess m4;
-		m4.car.id = 4;
-		m4.car.sortie = EST;
-		m4.car.entree = OUEST;
-		m4.type = 1;
-		
-		mess m5;
-		m5.car.id = 5;
-		m5.car.sortie = NORD;
-		m5.car.entree = OUEST;
-		m5.type = OUEST;
-		
-		mess m6;
-		m6.car.id = 6;
-		m6.car.sortie = SUD;
-		m6.car.entree = OUEST;
-		m6.type = OUEST;
-
-
+		m2.car.id = 2	;		 
+		m2.car.numCarrefour = 0; 
+		m2.car.entree = OUEST;
+		m2.car.numCarrefourFinal = 2;
+		m2.car.sortieFinale = NORD;  
+  		m2.car.sortie = EST; 
+		m2.car.prioritaire=VRAI;
+		m2.type = OUEST;
+			
 		
 		
-	//	msgsnd(msgid[0], &m2, sizeof(mess) - sizeof(long), 0);
+
+		//entree de la voiture 1 dans le circuit
+	//	msgsnd(msgid[m1.car.numCarrefour], &m1, sizeof(mess) - sizeof(long), 0);	
+		//memoiresPartagees[m1.car.numCarrefour][m1.car.entree-1]++;		//-1 car non prioritaire
+
+		//entree de la voiture 2 dans le circuit
+		msgsnd(msgid[m2.car.numCarrefour], &m2, sizeof(mess) - sizeof(long), 0);
+		memoiresPartagees[m2.car.numCarrefour][m2.car.entree+3]++;		//+3 car prioritaire
 
 
-		msgsnd(msgid[0], &m1, sizeof(mess) - sizeof(long), 0);	
-		memoiresPartagees[m1.car.numCarrefour][m1.car.entree-1]++;
 
-
-
-	//	msgsnd(msgid[0], &m3, sizeof(mess) - sizeof(long), 0);
-	//	msgsnd(msgid[0], &m4, sizeof(mess) - sizeof(long), 0);	
-	//	msgsnd(msgid[0], &m5, sizeof(mess) - sizeof(long), 0);
-	//	msgsnd(msgid[0], &m6, sizeof(mess) - sizeof(long), 0);
 		//printf("2 Nouvelle voiture dans la file...\n");
 
 
