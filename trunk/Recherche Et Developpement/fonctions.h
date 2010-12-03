@@ -389,14 +389,20 @@ void traitement(mess* message)
 	if(numCarrefourSvt!=-1){
 		messageAEnvoyer.car.numCarrefour=numCarrefourSvt;
 		msgsnd(msgid[numCarrefourSvt], &messageAEnvoyer, sizeof(mess) - sizeof(long), 0);
-		memoiresPartagees[messageAEnvoyer.car.numCarrefour][messageAEnvoyer.car.entree-1]++;
+
+		if(messageAEnvoyer.car.prioritaire==VRAI){
+			memoiresPartagees[messageAEnvoyer.car.numCarrefour][messageAEnvoyer.car.entree+3]++;
+		}
+		else{
+			memoiresPartagees[messageAEnvoyer.car.numCarrefour][messageAEnvoyer.car.entree-1]++;
+		}
 	}
 
 		int carrefour, numVoie;	
 		for(carrefour = 0; carrefour<4; carrefour++){
 			printf("Etat du carrefour %d\n",carrefour);		
 			for(numVoie = 0; numVoie<4; numVoie++){	
-				printf("Voie numero %d : %d\n",numVoie+1, memoiresPartagees[carrefour][numVoie]);		
+				printf("Voie numero %d : np:%d  p:%d\n",numVoie+1, memoiresPartagees[carrefour][numVoie], memoiresPartagees[carrefour][numVoie+4]);		
 			}
 			printf("\n");
 		}
@@ -424,17 +430,49 @@ void gestionCarrefour(int numCarrefour){
 		//allocation mess
 		mess* mTemp = (mess*) malloc(sizeof(mess));
 
+
+		//sleep(3);
+
+		//test si vehicule prioritaire dans le carrefour
+		int i, nbVoituresFile=50000, numFile=-1;
+
+
+		////////////////////////////////////gerer le fait qu'il puisse y avoir plus voiture prioritaire dans une file
+		for(i=4;i<8;i++){
+			if(memoiresPartagees[numCarrefour][i]>0){
+				printf("je passe en 1 et i=%d\n",i);
+				if(memoiresPartagees[numCarrefour][i-4]+memoiresPartagees[numCarrefour][4]<nbVoituresFile){
+					printf("je passe en 2\n");
+					numFile=i-3;	//1 OUEST, 2 SUD, 3 EST, 4 NORD
+					//nb de voitures présentes dans la file ou le véhicule prioritaire se trouve
+					nbVoituresFile=memoiresPartagees[numCarrefour][i-4]+memoiresPartagees[numCarrefour][4]; 
+				}				
+			}
+		}
+
+		printf("numero de la file ayant le plus de voiture%d\n",numFile);
+
+
 		// attente voiture
-		printf("Attente de voiture carrefour numero %d...\n",numCarrefour);
+		//printf("Attente de voiture carrefour numero %d...\n",numCarrefour);
 		//reception voiture
-	
-
-
-		int retour1=msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), 0, 0);
+		if(numFile!=-1){
+			//pas de vehicule prioritaire
+			msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), 0, 0);
+		}
+		else{
+			//il existe un vehicule prioritaire
+			msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), numFile, 0);
+		}
 
 		//decrementation
-		memoiresPartagees[mTemp->car.numCarrefour][mTemp->car.entree-1]--;
-	
+		if(mTemp->car.prioritaire==VRAI){
+			memoiresPartagees[mTemp->car.numCarrefour][mTemp->car.entree+3]--;
+		}
+		else{
+			memoiresPartagees[mTemp->car.numCarrefour][mTemp->car.entree-1]--;
+		}
+
 		int indice=(mTemp->car.entree)-1;
 		//printf("indice thread %d",indice);
 		printf("voiture %d recue carrefour numero %d ...\n",mTemp->car.id, numCarrefour);
