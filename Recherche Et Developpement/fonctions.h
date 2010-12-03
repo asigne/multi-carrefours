@@ -1,5 +1,53 @@
 #include "voiture.h"
 
+void supprimerIPC(){
+	printf("Suppression Sémaphores");
+	//destruction des semaphores
+	int ligne,colonne,numCarrefour;
+	for(numCarrefour = 0; numCarrefour<4; numCarrefour++){
+		for(ligne = 0; ligne<2; ligne++){
+			for(colonne = 0; colonne<2; colonne++){	
+				semctl(sem_in_out[numCarrefour][ligne][colonne], 0, IPC_RMID, 0);	
+			}
+		}
+	}
+
+
+	//suppression des memoires partagées et des files de messages
+	printf("suppression Memoires Partagées et Files de messages");
+	int i;
+	for(i=0; i<4; i++){
+		shmctl(idMemPartagee[i],0, IPC_RMID, NULL);
+		shmctl(msgid[i],0, IPC_RMID, NULL);
+	}
+}
+
+void nbMessageDansFile(int numCarrefour){
+	struct msqid_ds msqid_ds, *buf;
+    buf = & msqid_ds;
+	msgctl(msgid[numCarrefour], IPC_STAT, buf);
+	printf("Il y a %d véhicule(s) dans la file du carrefour %d\n",buf->msg_qnum, numCarrefour);
+}
+
+
+void affichageCarrefour(int carrefour){
+	int numVoie;	
+	printf("Etat du carrefour %d\n",carrefour);		
+	for(numVoie = 0; numVoie<4; numVoie++){	
+		printf("Voie numero %d : np:%d  p:%d\n",numVoie+1, memoiresPartagees[carrefour][numVoie], memoiresPartagees[carrefour][numVoie+4]);		
+	}
+	printf("\n");
+}
+
+void affichageCarrefours(){
+	int carrefour, numVoie;	
+	for(carrefour = 0; carrefour<4; carrefour++){
+		affichageCarrefour(carrefour);
+	}
+}
+
+
+
 int creerSem(int clef, int nombre){
 	int semid = semget(clef, nombre, IPC_CREAT | IPC_EXCL | 0666);
 	return semid;
@@ -398,14 +446,7 @@ void traitement(mess* message)
 		}
 	}
 
-		int carrefour, numVoie;	
-		for(carrefour = 0; carrefour<4; carrefour++){
-			printf("Etat du carrefour %d\n",carrefour);		
-			for(numVoie = 0; numVoie<4; numVoie++){	
-				printf("Voie numero %d : np:%d  p:%d\n",numVoie+1, memoiresPartagees[carrefour][numVoie], memoiresPartagees[carrefour][numVoie+4]);		
-			}
-			printf("\n");
-		}
+
 
 	free(message);	
 	pthread_exit(0);
@@ -433,16 +474,14 @@ void gestionCarrefour(int numCarrefour){
 
 		//sleep(3);
 
+
 		//test si vehicule prioritaire dans le carrefour
 		int i, nbVoituresFile=50000, numFile=-1;
 
-
-		////////////////////////////////////gerer le fait qu'il puisse y avoir plus voiture prioritaire dans une file
+		////////////////////////////////////gerer le fait qu'il puisse y avoir plus voiture prioritaire dans une file???
 		for(i=4;i<8;i++){
 			if(memoiresPartagees[numCarrefour][i]>0){
-				printf("je passe en 1 et i=%d\n",i);
 				if(memoiresPartagees[numCarrefour][i-4]+memoiresPartagees[numCarrefour][4]<nbVoituresFile){
-					printf("je passe en 2\n");
 					numFile=i-3;	//1 OUEST, 2 SUD, 3 EST, 4 NORD
 					//nb de voitures présentes dans la file ou le véhicule prioritaire se trouve
 					nbVoituresFile=memoiresPartagees[numCarrefour][i-4]+memoiresPartagees[numCarrefour][4]; 
@@ -450,34 +489,38 @@ void gestionCarrefour(int numCarrefour){
 			}
 		}
 
-		printf("numero de la file ayant le plus de voiture%d\n",numFile);
-
+		affichageCarrefour(numCarrefour);
+		nbMessageDansFile(numCarrefour);
 
 		// attente voiture
 		//printf("Attente de voiture carrefour numero %d...\n",numCarrefour);
 		//reception voiture
 		if(numFile!=-1){
-			//pas de vehicule prioritaire
-			msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), 0, 0);
-		}
-		else{
-			//il existe un vehicule prioritaire
+			printf("il existe un vehicule prioritaire\n");
+			printf("numero de la file ayant le moins de voitures : %d\n",numFile);
 			msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), numFile, 0);
 		}
+		else{
+			printf("pas de vehicule prioritaire\n");
+			msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), 0, 0);
+		}
 
-		//decrementation
+		printf("voiture %d recue carrefour numero %d, voie %d...\n",mTemp->car.id, numCarrefour, mTemp->car.entree);
+
+		//decrementation de la voie en fonction du fait qu'il existe un vehicule prioritaire 
 		if(mTemp->car.prioritaire==VRAI){
+			printf("decrementation vehicule prioritaire\n");
 			memoiresPartagees[mTemp->car.numCarrefour][mTemp->car.entree+3]--;
 		}
 		else{
+			printf("decrementation vehicule non prioritaire\n");
 			memoiresPartagees[mTemp->car.numCarrefour][mTemp->car.entree-1]--;
 		}
 
 		int indice=(mTemp->car.entree)-1;
 		//printf("indice thread %d",indice);
-		printf("voiture %d recue carrefour numero %d ...\n",mTemp->car.id, numCarrefour);
+		
 		//thread traiter voiture.
-
 		int retour=pthread_create(&thread_traitement[indice], NULL, (void * (*)(void *))traitement, mTemp);		
 		//printf("retour thread %d",retour);
 	}

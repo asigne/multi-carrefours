@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <sys/sem.h>
+#include <signal.h>
 #define ID_PROJET 'P'
 
 static int sem_in_out[4][2][2];
