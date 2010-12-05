@@ -20,6 +20,8 @@ pid_t pidCarrefour[4];
 pid_t pidServeurControleur;
 int msgidServeurControleur;
 
+int cptIdentifiant=0;
+
 enum{
 	FAUX=0,
 	VRAI

@@ -1,49 +1,37 @@
 #include "fonctions.h"
 
 void traitantSIGINT(int num){
-	/*printf("Suppression Sémaphores\n");
 	//destruction des semaphores
 	int ligne,colonne,numCarrefour;
 	for(numCarrefour = 0; numCarrefour<4; numCarrefour++){
 		for(ligne = 0; ligne<2; ligne++){
 			for(colonne = 0; colonne<2; colonne++){	
-			//	printf("%d\n",semctl(sem_in_out[numCarrefour][ligne][colonne], 0, IPC_RMID, 0));	
 				semctl(sem_in_out[numCarrefour][ligne][colonne], 0, IPC_RMID, 0);	
 			}
 		}
-	}*/
-
-
+	}
 	//suppression des memoires partagées et des files de messages
-	//printf("suppression Memoires Partagées et Files de messages\n");
 	int i;
 	for(i=0; i<4; i++){
-		//printf("%d\t%d\n",idMemPartagee[i], shmctl(idMemPartagee[i], 0, IPC_RMID, NULL));
-		//printf("%d\t%d\n",msgid[i], msgctl(msgid[i],0, IPC_RMID));
+		shmctl(idMemPartagee[i], IPC_RMID, NULL);
+		msgctl(msgid[i],IPC_RMID, NULL);
 	}
+	msgctl(msgidServeurControleur, IPC_RMID, NULL);
+
 	raise(SIGTERM);
 }
 
 int main(int argc, char **argv)
 {
-	struct sigaction action;
-	sigemptyset(&action.sa_mask);
-	action.sa_handler=traitantSIGINT;
-	sigaction(SIGINT,&action,NULL);
-
 	int i;
-
-	msgid[0]= msgget(666, IPC_CREAT | IPC_EXCL | 0666);
-	msgid[1]= msgget(667, IPC_CREAT | IPC_EXCL | 0666);
-	msgid[2]= msgget(668, IPC_CREAT | IPC_EXCL | 0666);
-	msgid[3]= msgget(669, IPC_CREAT | IPC_EXCL | 0666);
-
-	msgidServeurControleur=msgget(777, IPC_CREAT | IPC_EXCL | 0666);
-
-	idMemPartagee[0]=shmget(886, 8*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
-	idMemPartagee[1]=shmget(887, 8*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
-	idMemPartagee[2]=shmget(888, 8*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
-	idMemPartagee[3]=shmget(889, 8*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
+	for(i=0;i<4;i++){
+		msgid[i]= msgget(ftok(argv[0], ID_PROJET+cptIdentifiant), IPC_CREAT | IPC_EXCL | 0666);
+		cptIdentifiant++;		
+		idMemPartagee[i]=shmget(ftok(argv[0], ID_PROJET+cptIdentifiant), 8*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
+		cptIdentifiant++;
+	}
+	msgidServeurControleur=msgget(ftok(argv[0], ID_PROJET+cptIdentifiant), IPC_CREAT | IPC_EXCL | 0666);
+	cptIdentifiant++;
 
 //	int* memoiresPartagees[4];
 	for(i=0;i<4;i++){
@@ -58,11 +46,13 @@ int main(int argc, char **argv)
 		}
 	}
 
+	//vehicules non-prioritaires
 	memoiresPartagees[0][0]=3;
 	memoiresPartagees[0][1]=0;
 	memoiresPartagees[0][2]=2;
 	memoiresPartagees[0][3]=18;
-
+	
+	//vehicules prioritaires
 	memoiresPartagees[0][4]=0;
 	memoiresPartagees[0][7]=1;
 
@@ -76,27 +66,23 @@ int main(int argc, char **argv)
 		printf("\n");
 	}*/
 
+	
 
-	int numCarrefour,ligne,clef,colonne;
-	int cpt=1;
+	int numCarrefour,ligne,colonne;
 	for(numCarrefour = 0; numCarrefour<2; numCarrefour++){
 		for(ligne = 0; ligne<2; ligne++){
 			for(colonne = 0; colonne<2; colonne++){	
-				clef = 999+cpt*(numCarrefour+10); 			//verifier pour la clé
-				sem_in_out[numCarrefour][ligne][colonne]=creerSem(clef, 4);
+				sem_in_out[numCarrefour][ligne][colonne]=creerSem(ftok(argv[0], ID_PROJET+cptIdentifiant), 4);
 				initSem(sem_in_out[numCarrefour][ligne][colonne], 1);
-				cpt++;		
+				cptIdentifiant++;		
 			}
 		}
-		cpt=1;		
 	}
-
 	pid_t pidPere=getpid();
 
-
+	//creation des 4 carrefour	
 	for(i=0;i<4;i++){
 		if(getpid()==pidPere){
-			//printf("Creation du fils numero %d\n",i);
 			pidCarrefour[i] = fork();
 		}
 	}
@@ -105,29 +91,24 @@ int main(int argc, char **argv)
 		pidServeurControleur = fork();
 	}	
 
-
 	if(pidCarrefour[0] == 0){
 		// processus gérant le carrefour 0 (NORD-OUEST)
 		gestionCarrefour(0);
-		printf("Mort du fils 0...\n");
 		exit(0);
 	}
 	else if(pidCarrefour[1] == 0){
 		// processus gérant le carrefour 1 (NORD-EST)
 		gestionCarrefour(1);
-		//printf("Mort du fils 1...\n");		
 		exit(0);		
 	}
 	else if(pidCarrefour[2] == 0){
 		// processus gérant le carrefour 1 (NORD-EST)
 		gestionCarrefour(2);
-		//printf("Mort du fils 2...\n");		
 		exit(0);		
 	}
 	else if(pidCarrefour[3] == 0){
 		// processus gérant le carrefour 1 (NORD-EST)
 		gestionCarrefour(3);
-		//printf("Mort du fils 3...\n");		
 		exit(0);		
 	}
 	else if(pidServeurControleur == 0){
@@ -180,23 +161,15 @@ int main(int argc, char **argv)
 
 
 
-		//printf("2 Nouvelle voiture dans la file...\n");
+		struct sigaction action;
+		sigemptyset(&action.sa_mask);
+		action.sa_handler=traitantSIGINT;
+		sigaction(SIGINT,&action,NULL);		
 
-
-	/*	for(i=0;i<4;i++){
-			printf("%d\n",pidCarrefour[i]);
-		}*/
-
-		//sleep(5);
-
-		//afficheEtatSem();
-
-		
 		waitpid(pidCarrefour[0], NULL, NULL);
 		waitpid(pidCarrefour[1], NULL, NULL);
 		waitpid(pidCarrefour[2], NULL, NULL);
 		waitpid(pidCarrefour[3], NULL, NULL);
-
 		printf("Mort du père...\n");
 	}
 }
