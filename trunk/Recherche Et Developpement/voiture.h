@@ -15,6 +15,8 @@ int msgid[4];
 int idMemPartagee[4];
 
 int* memoiresPartagees[8];
+static pthread_mutex_t memPart;
+
 
 pid_t pidCarrefour[4];
 pid_t pidServeurControleur;

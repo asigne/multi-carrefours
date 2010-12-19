@@ -32,20 +32,51 @@ void nbMessageDansFile(int numCarrefour){
 
 void affichageCarrefour(int carrefour){
 	int numVoie;	
-	printf("Etat du carrefour %d\n",carrefour);		
+	printf("Etat du carrefour %d\n",carrefour);
+	pthread_mutex_lock(&memPart);		
 	for(numVoie = 0; numVoie<4; numVoie++){	
 		printf("Voie numero %d : np:%d  p:%d\n",numVoie+1, memoiresPartagees[carrefour][numVoie], memoiresPartagees[carrefour][numVoie+4]);		
 	}
+	pthread_mutex_unlock(&memPart);
 	printf("\n");
 }
 
-void affichageCarrefours(){
+/*void affichageCarrefours(){
 	int carrefour, numVoie;	
 	for(carrefour = 0; carrefour<4; carrefour++){
 		affichageCarrefour(carrefour);
 	}
-}
+}*/
 
+
+void affichageCarrefours(){
+/*char *tabChar[4][4];
+char buffer[3];
+
+
+	int i,j;
+	for(i=0;i<4;i++){
+		for(j=0;j<4;j++){
+			
+			
+			if(memoiresPartagees[i][j]<10){
+				sprintf(buffer, "%d ", memoiresPartagees[i][j]	);
+			}
+			else{
+				sprintf(buffer, "%d", memoiresPartagees[i][j]);
+			}	
+			tabChar[i][j]=buffer;
+		}	
+	}
+
+*/
+/*	printf("\n                  #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	########### %d|   ###################### %d|   ###########\n	              |   %d                       |   %d         \n	----------------------------------------------------------\n	         %d   |                       %d   |              \n	###########   |%d ######################   |%d ###########\n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	########### %d|   ###################### %d|   ###########\n	              |   %d                       |   %d         \n	----------------------------------------------------------\n	         %d   |                       %d   |              \n	###########   |%d ######################   |%d ###########\n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n",memoiresPartagees[0][3],memoiresPartagees[1][3],memoiresPartagees[0][2],memoiresPartagees[1][2],memoiresPartagees[0][0],memoiresPartagees[1][0],memoiresPartagees[0][1],memoiresPartagees[1][1],memoiresPartagees[2][3],memoiresPartagees[3][3],memoiresPartagees[2][2],memoiresPartagees[3][2],memoiresPartagees[2][0],memoiresPartagees[3][0],memoiresPartagees[2][1],memoiresPartagees[3][1]);
+}*/
+pthread_mutex_lock(&memPart);
+printf("\n                  #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          # %d|   #                    # %d|   #          \n	########### %d|   ###################### %d|   ###########\n	              |   %d %d                    |   %d %d      \n	----------------------------------------------------------\n	      %d %d   |                    %d %d   |              \n	###########   |%d ######################   |%d ###########\n	          #   |%d #                    #   |%d #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          # %d|   #                    # %d|   #          \n	########### %d|   ###################### %d|   ###########\n	              |   %d %d                    |   %d %d      \n	----------------------------------------------------------\n	      %d %d   |                    %d %d   |              \n	###########   |%d ######################   |%d ###########\n	          #   |%d #                    #   |%d #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n",memoiresPartagees[0][3+4],memoiresPartagees[1][3+4],memoiresPartagees[0][3],memoiresPartagees[1][3],memoiresPartagees[0][2],memoiresPartagees[0][2+4],memoiresPartagees[1][2],memoiresPartagees[1][2+4],memoiresPartagees[0][0+4],memoiresPartagees[0][0],memoiresPartagees[1][0+4],memoiresPartagees[1][0],memoiresPartagees[0][1],memoiresPartagees[1][1],memoiresPartagees[0][1+4],memoiresPartagees[1][1+4],memoiresPartagees[2][3+4],memoiresPartagees[3][3+4],memoiresPartagees[2][3],memoiresPartagees[3][3],memoiresPartagees[2][2],memoiresPartagees[2][2+4],memoiresPartagees[3][2],memoiresPartagees[3][2+4],memoiresPartagees[2][0+4],memoiresPartagees[2][0],memoiresPartagees[3][0+4],memoiresPartagees[3][0],memoiresPartagees[2][1],memoiresPartagees[3][1],memoiresPartagees[2][1+4],memoiresPartagees[3][1+4]);
+
+pthread_mutex_unlock(&memPart);
+}
 
 
 int creerSem(int clef, int nombre){
@@ -438,14 +469,20 @@ void traitement(mess* message)
 		messageAEnvoyer.car.numCarrefour=numCarrefourSvt;
 		msgsnd(msgid[numCarrefourSvt], &messageAEnvoyer, sizeof(mess) - sizeof(long), 0);
 
+
+		//proteger par mutex
+
 		if(messageAEnvoyer.car.prioritaire==VRAI){
+			pthread_mutex_lock(&memPart);
 			memoiresPartagees[messageAEnvoyer.car.numCarrefour][messageAEnvoyer.car.entree+3]++;
+			pthread_mutex_unlock(&memPart);
 		}
 		else{
+			pthread_mutex_lock(&memPart);
 			memoiresPartagees[messageAEnvoyer.car.numCarrefour][messageAEnvoyer.car.entree-1]++;
+			pthread_mutex_unlock(&memPart);
 		}
 	}
-
 
 
 	free(message);	
@@ -458,10 +495,10 @@ void traitement(mess* message)
 
 
 void gestionCarrefour(int numCarrefour){
+	sleep(5);
 	int ligne,colonne;
 	pthread_t thread_traitement[4];
 
-	//int* memoiresPartagees[4];
 	int i;
 	for(i=0;i<4;i++){
 		memoiresPartagees[i]=(int*) shmat(idMemPartagee[i], NULL, NULL);
@@ -478,30 +515,41 @@ void gestionCarrefour(int numCarrefour){
 		//test si vehicule prioritaire dans le carrefour
 		int i, nbVoituresFile=50000, numFile=-1;
 
+
+		affichageCarrefours();
+
+
 		////////////////////////////////////gerer le fait qu'il puisse y avoir plus voiture prioritaire dans une file???
 		for(i=4;i<8;i++){
+			pthread_mutex_lock(&memPart);
+			// si il existe un véhicule prioritaire attendant au carrefour
 			if(memoiresPartagees[numCarrefour][i]>0){
+				// choix de la file ayant le moins de voiture dans le cas ou il y a plusieurs vehicules prioritaires a un carrefour
 				if(memoiresPartagees[numCarrefour][i-4]+memoiresPartagees[numCarrefour][4]<nbVoituresFile){
 					numFile=i-3;	//1 OUEST, 2 SUD, 3 EST, 4 NORD
 					//nb de voitures présentes dans la file ou le véhicule prioritaire se trouve
 					nbVoituresFile=memoiresPartagees[numCarrefour][i-4]+memoiresPartagees[numCarrefour][4]; 
 				}				
 			}
+			pthread_mutex_unlock(&memPart);
 		}
 
-		affichageCarrefour(numCarrefour);
-		nbMessageDansFile(numCarrefour);
+		//affichageCarrefours(numCarrefour);
+		//nbMessageDansFile(numCarrefour);
 
 		// attente voiture
 		//printf("Attente de voiture carrefour numero %d...\n",numCarrefour);
 		//reception voiture
 		if(numFile!=-1){
+			printf("numFile :%d\n",numFile);
 			printf("il existe un vehicule prioritaire\n");
 			printf("numero de la file ayant le moins de voitures : %d\n",numFile);
+			//traite le vehicule se trouvant dans la file contenant un vehicule prioritaire 
 			msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), numFile, 0);
 		}
 		else{
 			printf("pas de vehicule prioritaire\n");
+			//traite le vehicule qui est arrivé en premier
 			msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), 0, 0);
 		}
 
@@ -510,11 +558,15 @@ void gestionCarrefour(int numCarrefour){
 		//decrementation de la voie en fonction du fait qu'il existe un vehicule prioritaire 
 		if(mTemp->car.prioritaire==VRAI){
 			printf("decrementation vehicule prioritaire\n");
+			pthread_mutex_lock(&memPart);
 			memoiresPartagees[mTemp->car.numCarrefour][mTemp->car.entree+3]--;
+			pthread_mutex_unlock(&memPart);
 		}
 		else{
 			printf("decrementation vehicule non prioritaire\n");
+			pthread_mutex_lock(&memPart);
 			memoiresPartagees[mTemp->car.numCarrefour][mTemp->car.entree-1]--;
+			pthread_mutex_unlock(&memPart);
 		}
 
 		int indice=(mTemp->car.entree)-1;
@@ -523,6 +575,10 @@ void gestionCarrefour(int numCarrefour){
 		//thread traiter voiture.
 		int retour=pthread_create(&thread_traitement[indice], NULL, (void * (*)(void *))traitement, mTemp);		
 		//printf("retour thread %d",retour);
+
+		sleep(2);
+		affichageCarrefours();
+
 	}
 	//destruction semaphores du carrefour
 	destructionSem();

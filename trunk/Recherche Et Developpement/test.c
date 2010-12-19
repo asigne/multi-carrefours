@@ -33,18 +33,20 @@ int main(int argc, char **argv)
 	msgidServeurControleur=msgget(ftok(argv[0], ID_PROJET+cptIdentifiant), IPC_CREAT | IPC_EXCL | 0666);
 	cptIdentifiant++;
 
-//	int* memoiresPartagees[4];
 	for(i=0;i<4;i++){
 		memoiresPartagees[i]=(int*) shmat(idMemPartagee[i], NULL, NULL);
 	}
 
 	//initialisation des compteurs de chaque voie
 	int carrefour, numVoie;
+	pthread_mutex_lock(&memPart);
 	for(carrefour = 0; carrefour<4; carrefour++){
 		for(numVoie = 0; numVoie<8; numVoie++){
 			memoiresPartagees[carrefour][numVoie]=0;
 		}
 	}
+	
+
 
 	//vehicules non-prioritaires
 	memoiresPartagees[0][0]=3;
@@ -54,7 +56,11 @@ int main(int argc, char **argv)
 	
 	//vehicules prioritaires
 	memoiresPartagees[0][4]=0;
-	memoiresPartagees[0][7]=1;
+	//memoiresPartagees[0][7]=1;
+	memoiresPartagees[0][7]=0;
+
+	pthread_mutex_unlock(&memPart);
+
 
 
 	//affichage des compteurs de chaque voie
@@ -96,7 +102,7 @@ int main(int argc, char **argv)
 		gestionCarrefour(0);
 		exit(0);
 	}
-	else if(pidCarrefour[1] == 0){
+	/*else if(pidCarrefour[1] == 0){
 		// processus gérant le carrefour 1 (NORD-EST)
 		gestionCarrefour(1);
 		exit(0);		
@@ -110,7 +116,7 @@ int main(int argc, char **argv)
 		// processus gérant le carrefour 1 (NORD-EST)
 		gestionCarrefour(3);
 		exit(0);		
-	}
+	}*/
 	else if(pidServeurControleur == 0){
 		// processus gérantle serveur controleur
 	/*	char buf[5][15];
@@ -155,11 +161,18 @@ int main(int argc, char **argv)
 	//	msgsnd(msgid[m1.car.numCarrefour], &m1, sizeof(mess) - sizeof(long), 0);	
 	//	memoiresPartagees[m1.car.numCarrefour][m1.car.entree-1]++;		//-1 car non prioritaire
 
+affichageCarrefours();
+		
+		
 		//entree de la voiture 2 dans le circuit
 		msgsnd(msgid[m2.car.numCarrefour], &m2, sizeof(mess) - sizeof(long), 0);
+		pthread_mutex_lock(&memPart);
 		memoiresPartagees[m2.car.numCarrefour][m2.car.entree+3]++;		//+3 car prioritaire
+		pthread_mutex_unlock(&memPart);
 
 
+//affichageCarrefours();
+		
 
 		struct sigaction action;
 		sigemptyset(&action.sa_mask);
