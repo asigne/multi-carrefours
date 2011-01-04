@@ -9,6 +9,25 @@
 #include <sys/types.h>
 #include <sys/sem.h>
 
+
+enum
+{
+	OUEST = 0,
+	SUD,
+	EST,
+	NORD
+};
+
+
+enum
+{
+	CARREFOUR_NO = 0,
+	CARREFOUR_NE,
+	CARREFOUR_SO,
+	CARREFOUR_SE
+};
+
+
 typedef struct
 {
 	long type;
@@ -26,7 +45,6 @@ typedef struct
 {
 	long type;
 	
-	int idDest;
 	int voieDest;
 	
 } RepCtrleur;
@@ -38,11 +56,6 @@ typedef struct
 	int idVoie;
 	int Traffic;
 } Traffic;
-
-typedef struct
-{
-	int Open[4];
-} Liste;
 
 
 #endif
