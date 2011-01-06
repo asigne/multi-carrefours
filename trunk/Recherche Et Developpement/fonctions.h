@@ -11,7 +11,7 @@
 #include <time.h>
 
 #define ID_PROJET 'P'
-#define NbVoituresGlobal 100
+#define NbVoituresGlobal 1000
 
 
 static int sem_in_out[4][2][2];
