@@ -11,7 +11,7 @@
 #include <time.h>
 
 #define ID_PROJET 'P'
-#define NbVoituresGlobal 1000
+#define NbVoituresGlobal 100
 
 
 static int sem_in_out[4][2][2];
@@ -31,6 +31,10 @@ static int cptIdentifiant=0;
 
 //compteur des identifiants de voitures
 static int cptVoitures=1;
+
+int idCptExitFaux;
+//compteur voiture exit "faux"
+int *cptExitFaux;
 
 enum{
 	FAUX=0,

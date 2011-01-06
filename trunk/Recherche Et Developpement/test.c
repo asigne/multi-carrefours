@@ -1,6 +1,8 @@
 #include "fonctions.h"
 
 void traitantSIGINT(int num){
+	printf("Interruption du programme !\n%d voitures ont été dirrigées vers des sorties non souhaitées pour faciliter la circulation des véhicules prioritaires.\n",cptExitFaux[0]);
+
 	//destruction des semaphores
 	int ligne,colonne,numCarrefour;
 	for(numCarrefour = 0; numCarrefour<4; numCarrefour++){
@@ -16,9 +18,9 @@ void traitantSIGINT(int num){
 		shmctl(idMemPartagee[i], IPC_RMID, NULL);
 		msgctl(msgid[i],IPC_RMID, NULL);
 	}
+	shmctl(idCptExitFaux, IPC_RMID, NULL);
 	msgctl(msgidServeurControleur, IPC_RMID, NULL);
-
-	raise(SIGTERM);
+	//raise(SIGTERM);
 }
 
 int main(int argc, char **argv)
@@ -40,7 +42,12 @@ int main(int argc, char **argv)
 	for(i=0;i<4;i++){
 		memoiresPartagees[i]=(int*) shmat(idMemPartagee[i], NULL, NULL);
 	}
-
+	
+	
+	idCptExitFaux=shmget(ftok(argv[0], ID_PROJET+cptIdentifiant), sizeof(int), IPC_CREAT | IPC_EXCL | 0777);
+	cptIdentifiant++;
+	cptExitFaux=(int*)shmat(idCptExitFaux, NULL, NULL);
+	
 	//initialisation des compteurs de chaque voie
 	int carrefour, numVoie;
 	pthread_mutex_lock(&memPart);
@@ -53,7 +60,7 @@ int main(int argc, char **argv)
 
 	//creation et initialisation des semaphores gerant les croisements des voitures aux carrefours
 	int numCarrefour,ligne,colonne;
-	for(numCarrefour = 0; numCarrefour<2; numCarrefour++){
+	for(numCarrefour = 0; numCarrefour<4; numCarrefour++){
 		for(ligne = 0; ligne<2; ligne++){
 			for(colonne = 0; colonne<2; colonne++){	
 				sem_in_out[numCarrefour][ligne][colonne]=creerSem(ftok(argv[0], ID_PROJET+cptIdentifiant), 4);
@@ -70,7 +77,7 @@ int main(int argc, char **argv)
 		
 	//plateau au demarrage du programme	
 	affichageCarrefours();
-	sleep(3);
+	sleep(1);
 	
 	pidPere=getpid();
 
@@ -113,7 +120,10 @@ int main(int argc, char **argv)
 	}
 	else if(pidServeurControleur == 0){
 		// processus gérant le serveur controleur
-		char buf[5][15];
+		
+		
+		
+		/*char buf[5][15];
 		sprintf(buf[0], "%d", msgidServeurControleur);
 
 		sprintf(buf[1], "%d", idMemPartagee[0]);
@@ -122,7 +132,14 @@ int main(int argc, char **argv)
 		sprintf(buf[4], "%d", idMemPartagee[3]);
 
 		execl("../ServeurControleur/serveur","serveur", buf[0], buf[1], buf[2], buf[3], buf[4], NULL);
-		printf("Mort du serveur controleur...\n");		
+		printf("Mort du serveur controleur...\n");*/
+		
+		
+		
+		
+		
+		
+		serveurControleur(idMemPartagee[0], idMemPartagee[1], idMemPartagee[2], idMemPartagee[3]);		
 		exit(0);	
 	}
 	else if(pidAffichage == 0){
@@ -154,7 +171,6 @@ int main(int argc, char **argv)
 		waitpid(pidGenerateur, NULL, NULL);
 		waitpid(pidAffichage, NULL, NULL);
 		waitpid(pidServeurControleur, NULL, NULL);
-		printf("Mort du père...\n");
 	}
 }
 
