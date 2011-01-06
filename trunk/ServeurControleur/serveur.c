@@ -56,6 +56,8 @@ int* shMem[4];
 
 int main(int argc, char* argv[])
 {
+	printf("LE SERVEUR CONTROLEUR EST FONCTIONNEL\n");
+
 	if(argc != 6)
 	{
 		printf("Arguments manquants : ./Serveur msgid shmid0 shmid1 shmid2 shmid3\n");
@@ -73,6 +75,8 @@ int main(int argc, char* argv[])
 	for(i = 0; i<4; i++)
 		shMem[i] = (int*) shmat(shmid[i], 0, 0);
 	
+	
+	printf("valeurMemPartagee %d\n", shMem[1][0]);
 	
 	pthread_t thread;
 	
@@ -100,6 +104,17 @@ int main(int argc, char* argv[])
 	
 	
 	exit(0);
+}
+
+
+int AjouteTraffic(int TrafficCourant, int Carrefour, int Voie)
+{
+	if(TrafficCourant == -1 || shMem[Carrefour][Voie-1] > MAX_TRAFFIC)
+	{
+		return -1;
+	}
+	
+	return TrafficCourant + shMem[Carrefour][Voie-1];
 }
 
 
@@ -138,72 +153,6 @@ void* AnalyseTraffic(ReqEchgeur* req)
 	pthread_exit(0);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-int main2()
-{
-	int i;
-	for(i = 0; i<4; i++)
-		shmid[i] = shmget(777+i, 4*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
-	
-	
-	for(i = 0; i<4; i++)
-		shMem[i] = (int*) shmat(shmid[i], 0, 0);
-	
-	printf("Attachement OK\n");
-	
-	// traffic sur les entrées.
-	shMem[0][OUEST] = 5;
-	shMem[0][SUD] = 8;
-	shMem[0][EST] = 3;
-	shMem[0][NORD] = 3;
-	
-	shMem[1][OUEST] = 9;
-	shMem[1][SUD] = 6;
-	shMem[1][EST] = 3;
-	shMem[1][NORD] = 8;
-	
-	shMem[2][OUEST] = 4;
-	shMem[2][SUD] = 9;
-	shMem[2][EST] = 7;
-	shMem[2][NORD] = 2;
-	
-	shMem[3][OUEST] = 1;
-	shMem[3][SUD] = 1;
-	shMem[3][EST] = 4;
-	shMem[3][NORD] = 10;
-	
-	
-	Traffic tOrigine;
-	Traffic tDest;
-	
-	// on entre a l'ouest du carrefour 0.
-	tOrigine.idCarrefour = 2;
-	tOrigine.idVoie = 1;
-	tOrigine.Traffic = 0;
-	
-	// on sort au sud du carrefour 3.
-	tDest.idCarrefour = 0;
-	tDest.idVoie = 3;
-	tDest.Traffic = 0;
-	
-	
-	
-	int voie = chemin_plus_rapide2(tOrigine, tDest);
-	
-	printf("\nvoie a prendre : %d\n", voie);
-	
-	
-	// delete les mem partagées.
-	
-	for(i = 0; i<4; i++)
-	{
-		shmdt(shMem[i]);
-		shmctl(shmid[i], IPC_RMID);
-	}
-}
-*/
-
 
 // /////////////////////////////////////////////////////////
 // Retourne numéro de voie du carrefour en cours a prendre.
@@ -233,58 +182,67 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			Traffic CheminA, CheminB;
 			
-			CheminA.Traffic = shMem[Origine.idCarrefour][Origine.idVoie];
-			CheminB.Traffic = shMem[Origine.idCarrefour][Origine.idVoie];
+			CheminA.Traffic = 0; // shMem[Origine.idCarrefour][Origine.idVoie];
+			CheminB.Traffic = 0; // shMem[Origine.idCarrefour][Origine.idVoie];
 			
 			///////////////////////////////
 			// A -> on prend vers l'est.
 			
-			// carrefour Nord-Est entrée Ouest
-			CheminA.Traffic += shMem[CARREFOUR_NE][OUEST];
-			
-			// si ce n'est pas le carrefour d'arrivée, on continue.
-			if(Destination.idCarrefour != CARREFOUR_NE)
+			if(Origine.idVoie == EST)
 			{
-				// Carrefour Sud-Est arrivée Nord.
-				CheminA.Traffic += shMem[CARREFOUR_SE][NORD];
-				
-				if(Destination.idCarrefour != CARREFOUR_SE)
+				CheminA.Traffic = -1;
+			} else {
+				// carrefour Nord-Est entrée Ouest
+				CheminA.Traffic = AjouteTraffic(CheminA.Traffic, CARREFOUR_NE, OUEST);
+				// si ce n'est pas le carrefour d'arrivée, on continue.
+				if(Destination.idCarrefour != CARREFOUR_NE)
 				{
-					// Carrefour Sud-Ouest arrivée Est.
-					CheminA.Traffic += shMem[CARREFOUR_SO][EST];
-					
-					if(Destination.idCarrefour != CARREFOUR_SO)
+					// Carrefour Sud-Est arrivée Nord.
+					CheminA.Traffic = AjouteTraffic(CheminA.Traffic, CARREFOUR_SE, NORD);
+				
+					if(Destination.idCarrefour != CARREFOUR_SE)
 					{
-						// erreur !
-						printf("Erreur ! Numéro de carrefour erronné. Code 0A\n");
+						// Carrefour Sud-Ouest arrivée Est.
+						CheminA.Traffic = AjouteTraffic(CheminA.Traffic, CARREFOUR_SO, EST);
+					
+						if(Destination.idCarrefour != CARREFOUR_SO)
+						{
+							// erreur !
+							printf("Erreur ! Numéro de carrefour erronné. Code 0A\n");
+						}
 					}
 				}
 			}
 			
-			
 			///////////////////////////////
 			// B -> on prend vers le sud.
 			
-			// carrefour Sud-Ouest entrée Nord
-			CheminB.Traffic += shMem[CARREFOUR_SO][NORD];
-			
-			// si ce n'est pas le carrefour d'arrivée, on continue.
-			if(Destination.idCarrefour != CARREFOUR_SO)
+			if(Origine.idVoie == SUD)
 			{
-				// Carrefour Sud-Est arrivée Ouest.
-				CheminB.Traffic += shMem[CARREFOUR_SE][OUEST];
-				
-				if(Destination.idCarrefour != CARREFOUR_SE)
+				CheminB.Traffic = -1;
+			} else {
+				// carrefour Sud-Ouest entrée Nord
+				CheminB.Traffic = AjouteTraffic(CheminB.Traffic, CARREFOUR_SO, NORD);
+			
+				// si ce n'est pas le carrefour d'arrivée, on continue.
+				if(Destination.idCarrefour != CARREFOUR_SO)
 				{
-					// Carrefour Nord-Est arrivée Sud.
-					CheminB.Traffic += shMem[CARREFOUR_NE][SUD];
-					
-					if(Destination.idCarrefour != CARREFOUR_NE)
+					// Carrefour Sud-Est arrivée Ouest.
+					CheminB.Traffic = AjouteTraffic(CheminB.Traffic, CARREFOUR_SE, OUEST);
+				
+					if(Destination.idCarrefour != CARREFOUR_SE)
 					{
-						// erreur !
-						printf("Erreur ! Numéro de carrefour erronné. Code 0B\n");
+						// Carrefour Nord-Est arrivée Sud.
+						CheminB.Traffic = AjouteTraffic(CheminB.Traffic, CARREFOUR_NE, SUD);
+					
+						if(Destination.idCarrefour != CARREFOUR_NE)
+						{
+							// erreur !
+							printf("Erreur ! Numéro de carrefour erronné. Code 0B\n");
+						}
 					}
 				}
+				
 			}
 			
 			////////////////////////////////
@@ -292,6 +250,20 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			printf("PathFinder Traffics : Chemin A %d  Chemin B  %d\n", CheminA.Traffic, CheminB.Traffic);
 			
+			// si les sorties sont saturées ou interdites (demitour) on prend une autre sortie.
+			if(CheminA.Traffic == -1 && CheminB.Traffic == -1)
+			{
+				return NORD;
+			}
+			
+			// si le chemin A est bloqué, on prend le B et inversement.
+			if(CheminA.Traffic == -1)
+				return SUD;
+			
+			if(CheminB.Traffic == -1)
+				return EST;
+			
+			// sinon finalement on compare et on prend au plus court.
 			if(CheminA.Traffic <= CheminB.Traffic)
 			{
 				// on prend le chemin A, vers l'est
@@ -311,56 +283,66 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			Traffic CheminA, CheminB;
 			
-			CheminA.Traffic = shMem[Origine.idCarrefour][Origine.idVoie];
-			CheminB.Traffic = shMem[Origine.idCarrefour][Origine.idVoie];
+			CheminA.Traffic = 0; // shMem[Origine.idCarrefour, Origine.idVoie];
+			CheminB.Traffic = 0; // shMem[Origine.idCarrefour, Origine.idVoie];
 			
 			///////////////////////////////
 			// A -> on prend vers l'ouest.
 			
-			// carrefour Nord-Ouest entrée Est
-			CheminA.Traffic += shMem[CARREFOUR_NO][EST];
-			
-			// si ce n'est pas le carrefour d'arrivée, on continue.
-			if(Destination.idCarrefour != CARREFOUR_NO)
+			if(Origine.idVoie == OUEST)
 			{
-				// Carrefour Sud-Ouest arrivée Nord.
-				CheminA.Traffic += shMem[CARREFOUR_SO][NORD];
-				
-				if(Destination.idCarrefour != CARREFOUR_SO)
+				CheminA.Traffic = -1;
+			} else {
+				// carrefour Nord-Ouest entrée Est
+				CheminA.Traffic = AjouteTraffic(CheminA.Traffic, CARREFOUR_NO, EST);
+			
+				// si ce n'est pas le carrefour d'arrivée, on continue.
+				if(Destination.idCarrefour != CARREFOUR_NO)
 				{
-					// Carrefour Sud-Est arrivée Ouest.
-					CheminA.Traffic += shMem[CARREFOUR_SE][OUEST];
-					
-					if(Destination.idCarrefour != CARREFOUR_SE)
+					// Carrefour Sud-Ouest arrivée Nord.
+					CheminA.Traffic = AjouteTraffic(CheminA.Traffic, CARREFOUR_SO, NORD);
+				
+					if(Destination.idCarrefour != CARREFOUR_SO)
 					{
-						// erreur !
-						printf("Erreur ! Numéro de carrefour erronné. Code 1A\n");
+						// Carrefour Sud-Est arrivée Ouest.
+						CheminA.Traffic = AjouteTraffic(CheminA.Traffic, CARREFOUR_SE, OUEST);
+					
+						if(Destination.idCarrefour != CARREFOUR_SE)
+						{
+							// erreur !
+							printf("Erreur ! Numéro de carrefour erronné. Code 1A\n");
+						}
 					}
 				}
 			}
 			
-			
 			///////////////////////////////
 			// B -> on prend vers le sud.
 			
-			// carrefour Sud-Est entrée Nord
-			CheminB.Traffic += shMem[CARREFOUR_SE][NORD];
-			
-			// si ce n'est pas le carrefour d'arrivée, on continue.
-			if(Destination.idCarrefour != CARREFOUR_SE)
+			if(Origine.idVoie == SUD)
 			{
-				// Carrefour Sud-Ouest arrivée Est.
-				CheminB.Traffic += shMem[CARREFOUR_SO][EST];
-				
-				if(Destination.idCarrefour != CARREFOUR_SO)
+				CheminB.Traffic = -1;
+			} else {
+			
+				// carrefour Sud-Est entrée Nord
+				CheminB.Traffic = AjouteTraffic(CheminB.Traffic, CARREFOUR_SE, NORD);
+			
+				// si ce n'est pas le carrefour d'arrivée, on continue.
+				if(Destination.idCarrefour != CARREFOUR_SE)
 				{
-					// Carrefour Nord-Ouest arrivée Sud.
-					CheminB.Traffic += shMem[CARREFOUR_NO][SUD];
-					
-					if(Destination.idCarrefour != CARREFOUR_NO)
+					// Carrefour Sud-Ouest arrivée Est.
+					CheminB.Traffic = AjouteTraffic(CheminB.Traffic, CARREFOUR_SO, EST);
+				
+					if(Destination.idCarrefour != CARREFOUR_SO)
 					{
-						// erreur !
-						printf("Erreur ! Numéro de carrefour erronné. Code 1B\n");
+						// Carrefour Nord-Ouest arrivée Sud.
+						CheminB.Traffic = AjouteTraffic(CheminB.Traffic, CARREFOUR_NO, SUD);
+					
+						if(Destination.idCarrefour != CARREFOUR_NO)
+						{
+							// erreur !
+							printf("Erreur ! Numéro de carrefour erronné. Code 1B\n");
+						}
 					}
 				}
 			}
@@ -370,6 +352,20 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			printf("PathFinder Traffics : Chemin A %d  Chemin B  %d\n", CheminA.Traffic, CheminB.Traffic);
 			
+			// si les sorties sont saturées ou interdites (demitour) on prend une autre sortie.
+			if(CheminA.Traffic == -1 && CheminB.Traffic == -1)
+			{
+				return NORD;
+			}
+			
+			// si le chemin A est bloqué, on prend le B et inversement.
+			if(CheminA.Traffic == -1)
+				return SUD;
+			
+			if(CheminB.Traffic == -1)
+				return OUEST;
+			
+			// sinon finalement on compare et on prend au plus court.
 			if(CheminA.Traffic <= CheminB.Traffic)
 			{
 				// on prend le chemin A, vers l'ouest
@@ -388,56 +384,66 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			Traffic CheminA, CheminB;
 			
-			CheminA.Traffic = shMem[Origine.idCarrefour][Origine.idVoie];
-			CheminB.Traffic = shMem[Origine.idCarrefour][Origine.idVoie];
+			CheminA.Traffic = 0; // shMem[Origine.idCarrefour, Origine.idVoie];
+			CheminB.Traffic = 0; // shMem[Origine.idCarrefour, Origine.idVoie];
 			
 			///////////////////////////////
 			// A -> on prend vers le nord.
 			
-			// carrefour Nord-Ouest entrée Sud
-			CheminA.Traffic += shMem[CARREFOUR_NO][SUD];
-			
-			// si ce n'est pas le carrefour d'arrivée, on continue.
-			if(Destination.idCarrefour != CARREFOUR_NO)
+			if(Origine.idVoie == NORD)
 			{
-				// Carrefour Nord-Est arrivée Ouest.
-				CheminA.Traffic += shMem[CARREFOUR_NE][OUEST];
-				
-				if(Destination.idCarrefour != CARREFOUR_NE)
+				CheminA.Traffic = -1;
+			} else {
+				// carrefour Nord-Ouest entrée Sud
+				CheminA.Traffic = AjouteTraffic(CheminA.Traffic, CARREFOUR_NO, SUD);
+			
+				// si ce n'est pas le carrefour d'arrivée, on continue.
+				if(Destination.idCarrefour != CARREFOUR_NO)
 				{
-					// Carrefour Sud-Est arrivée Nord.
-					CheminA.Traffic += shMem[CARREFOUR_SE][NORD];
-					
-					if(Destination.idCarrefour != CARREFOUR_SE)
+					// Carrefour Nord-Est arrivée Ouest.
+					CheminA.Traffic = AjouteTraffic(CheminA.Traffic, CARREFOUR_NE, OUEST);
+				
+					if(Destination.idCarrefour != CARREFOUR_NE)
 					{
-						// erreur !
-						printf("Erreur ! Numéro de carrefour erronné. Code 2A\n");
+						// Carrefour Sud-Est arrivée Nord.
+						CheminA.Traffic = AjouteTraffic(CheminA.Traffic, CARREFOUR_SE, NORD);
+					
+						if(Destination.idCarrefour != CARREFOUR_SE)
+						{
+							// erreur !
+							printf("Erreur ! Numéro de carrefour erronné. Code 2A\n");
+						}
 					}
 				}
 			}
 			
-			
 			///////////////////////////////
 			// B -> on prend vers le est.
 			
-			// carrefour Sud-Est entrée Ouest
-			CheminB.Traffic += shMem[CARREFOUR_SE][OUEST];
-			
-			// si ce n'est pas le carrefour d'arrivée, on continue.
-			if(Destination.idCarrefour != CARREFOUR_SE)
+			if(Origine.idVoie == EST)
 			{
-				// Carrefour Nord-Est arrivée Sud.
-				CheminB.Traffic += shMem[CARREFOUR_NE][SUD];
-				
-				if(Destination.idCarrefour != CARREFOUR_NE)
+				CheminB.Traffic = -1;
+			} else {
+			
+				// carrefour Sud-Est entrée Ouest
+				CheminB.Traffic = AjouteTraffic(CheminB.Traffic, CARREFOUR_SE, OUEST);
+			
+				// si ce n'est pas le carrefour d'arrivée, on continue.
+				if(Destination.idCarrefour != CARREFOUR_SE)
 				{
-					// Carrefour Nord-Ouest arrivée Est.
-					CheminB.Traffic += shMem[CARREFOUR_NO][EST];
-					
-					if(Destination.idCarrefour != CARREFOUR_NO)
+					// Carrefour Nord-Est arrivée Sud.
+					CheminB.Traffic = AjouteTraffic(CheminB.Traffic, CARREFOUR_NE, SUD);
+				
+					if(Destination.idCarrefour != CARREFOUR_NE)
 					{
-						// erreur !
-						printf("Erreur ! Numéro de carrefour erronné. Code 2B\n");
+						// Carrefour Nord-Ouest arrivée Est.
+						CheminB.Traffic = AjouteTraffic(CheminB.Traffic, CARREFOUR_NO, EST);
+					
+						if(Destination.idCarrefour != CARREFOUR_NO)
+						{
+							// erreur !
+							printf("Erreur ! Numéro de carrefour erronné. Code 2B\n");
+						}
 					}
 				}
 			}
@@ -447,6 +453,20 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			printf("PathFinder Traffics : Chemin A %d  Chemin B  %d\n", CheminA.Traffic, CheminB.Traffic);
 			
+			// si les sorties sont saturées ou interdites (demitour) on prend une autre sortie.
+			if(CheminA.Traffic == -1 && CheminB.Traffic == -1)
+			{
+				return SUD;
+			}
+			
+			// si le chemin A est bloqué, on prend le B et inversement.
+			if(CheminA.Traffic == -1)
+				return EST;
+			
+			if(CheminB.Traffic == -1)
+				return NORD;
+			
+			// sinon finalement on compare et on prend au plus court.
 			if(CheminA.Traffic <= CheminB.Traffic)
 			{
 				// on prend le chemin A, vers le Nord
@@ -465,56 +485,65 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			Traffic CheminA, CheminB;
 			
-			CheminA.Traffic = shMem[Origine.idCarrefour][Origine.idVoie];
-			CheminB.Traffic = shMem[Origine.idCarrefour][Origine.idVoie];
+			CheminA.Traffic = 0; // shMem[Origine.idCarrefour, Origine.idVoie];
+			CheminB.Traffic = 0; // shMem[Origine.idCarrefour, Origine.idVoie];
 			
 			///////////////////////////////
 			// A -> on prend vers le nord.
 			
-			// carrefour Nord-Est entrée Sud
-			CheminA.Traffic += shMem[CARREFOUR_NE][SUD];
-			
-			// si ce n'est pas le carrefour d'arrivée, on continue.
-			if(Destination.idCarrefour != CARREFOUR_NE)
+			if(Origine.idVoie == NORD)
 			{
-				// Carrefour Nord-Ouest arrivée Est.
-				CheminA.Traffic += shMem[CARREFOUR_NO][EST];
-				
-				if(Destination.idCarrefour != CARREFOUR_NO)
+				CheminA.Traffic = -1;
+			} else {
+				// carrefour Nord-Est entrée Sud
+				CheminA.Traffic = AjouteTraffic(CheminA.Traffic, CARREFOUR_NE, SUD);
+			
+				// si ce n'est pas le carrefour d'arrivée, on continue.
+				if(Destination.idCarrefour != CARREFOUR_NE)
 				{
-					// Carrefour Sud-Ouest arrivée Nord.
-					CheminA.Traffic += shMem[CARREFOUR_SO][NORD];
-					
-					if(Destination.idCarrefour != CARREFOUR_SO)
+					// Carrefour Nord-Ouest arrivée Est.
+					CheminA.Traffic = AjouteTraffic(CheminA.Traffic, CARREFOUR_NO, EST);
+				
+					if(Destination.idCarrefour != CARREFOUR_NO)
 					{
-						// erreur !
-						printf("Erreur ! Numéro de carrefour erronné. Code 3A\n");
+						// Carrefour Sud-Ouest arrivée Nord.
+						CheminA.Traffic = AjouteTraffic(CheminA.Traffic, CARREFOUR_SO, NORD);
+					
+						if(Destination.idCarrefour != CARREFOUR_SO)
+						{
+							// erreur !
+							printf("Erreur ! Numéro de carrefour erronné. Code 3A\n");
+						}
 					}
 				}
 			}
 			
-			
 			///////////////////////////////
 			// B -> on prend vers le ouest.
 			
-			// carrefour Sud-Ouest entrée Est
-			CheminB.Traffic += shMem[CARREFOUR_SO][EST];
-			
-			// si ce n'est pas le carrefour d'arrivée, on continue.
-			if(Destination.idCarrefour != CARREFOUR_SO)
+			if(Origine.idVoie == EST)
 			{
-				// Carrefour Nord-Ouest arrivée Sud.
-				CheminB.Traffic += shMem[CARREFOUR_NO][SUD];
-				
-				if(Destination.idCarrefour != CARREFOUR_NO)
+				CheminB.Traffic = -1;
+			} else {
+				// carrefour Sud-Ouest entrée Est
+				CheminB.Traffic = AjouteTraffic(CheminB.Traffic, CARREFOUR_SO, EST);
+			
+				// si ce n'est pas le carrefour d'arrivée, on continue.
+				if(Destination.idCarrefour != CARREFOUR_SO)
 				{
-					// Carrefour Nord-Est arrivée Ouest.
-					CheminB.Traffic += shMem[CARREFOUR_NE][OUEST];
-					
-					if(Destination.idCarrefour != CARREFOUR_NE)
+					// Carrefour Nord-Ouest arrivée Sud.
+					CheminB.Traffic = AjouteTraffic(CheminB.Traffic, CARREFOUR_NO, SUD);
+				
+					if(Destination.idCarrefour != CARREFOUR_NO)
 					{
-						// erreur !
-						printf("Erreur ! Numéro de carrefour erronné. Code 3B\n");
+						// Carrefour Nord-Est arrivée Ouest.
+						CheminB.Traffic = AjouteTraffic(CheminB.Traffic, CARREFOUR_NE, OUEST);
+					
+						if(Destination.idCarrefour != CARREFOUR_NE)
+						{
+							// erreur !
+							printf("Erreur ! Numéro de carrefour erronné. Code 3B\n");
+						}
 					}
 				}
 			}
@@ -524,6 +553,20 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			printf("PathFinder Traffics : Chemin A %d  Chemin B  %d\n", CheminA.Traffic, CheminB.Traffic);
 			
+			// si les sorties sont saturées ou interdites (demitour) on prend une autre sortie.
+			if(CheminA.Traffic == -1 && CheminB.Traffic == -1)
+			{
+				return SUD;
+			}
+			
+			// si le chemin A est bloqué, on prend le B et inversement.
+			if(CheminA.Traffic == -1)
+				return OUEST;
+			
+			if(CheminB.Traffic == -1)
+				return NORD;
+			
+			// sinon finalement on compare et on prend au plus court.
 			if(CheminA.Traffic <= CheminB.Traffic)
 			{
 				// on prend le chemin A, vers le Nord

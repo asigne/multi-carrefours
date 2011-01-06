@@ -23,6 +23,8 @@ void traitantSIGINT(int num){
 
 int main(int argc, char **argv)
 {
+	srand(time(NULL));
+	
 	int i;
 	for(i=0;i<4;i++){
 		msgid[i]= msgget(ftok(argv[0], ID_PROJET+cptIdentifiant), IPC_CREAT | IPC_EXCL | 0666);
@@ -47,18 +49,19 @@ int main(int argc, char **argv)
 	}
 	
 
-
+/*
 	//vehicules non-prioritaires
 	memoiresPartagees[0][0]=3;
 	memoiresPartagees[0][1]=0;
 	memoiresPartagees[0][2]=2;
-	memoiresPartagees[0][3]=18;
-	
+*/
+	//memoiresPartagees[1][0]=1;
+/*	
 	//vehicules prioritaires
 	memoiresPartagees[0][4]=0;
 	//memoiresPartagees[0][7]=1;
 	memoiresPartagees[0][7]=0;
-
+*/
 	pthread_mutex_unlock(&memPart);
 
 
@@ -84,6 +87,12 @@ int main(int argc, char **argv)
 			}
 		}
 	}
+	
+	
+	for(i=0;i<10000;i++){
+			creerVoiture();
+		}	
+	
 	pid_t pidPere=getpid();
 
 	//creation des 4 carrefour	
@@ -95,6 +104,7 @@ int main(int argc, char **argv)
 	//creation serveur controleur
 	if(getpid()==pidPere){
 		pidServeurControleur = fork();
+		pidAffichage = fork();
 	}	
 
 	if(pidCarrefour[0] == 0){
@@ -102,7 +112,7 @@ int main(int argc, char **argv)
 		gestionCarrefour(0);
 		exit(0);
 	}
-	/*else if(pidCarrefour[1] == 0){
+	else if(pidCarrefour[1] == 0){
 		// processus gérant le carrefour 1 (NORD-EST)
 		gestionCarrefour(1);
 		exit(0);		
@@ -116,10 +126,10 @@ int main(int argc, char **argv)
 		// processus gérant le carrefour 1 (NORD-EST)
 		gestionCarrefour(3);
 		exit(0);		
-	}*/
+	}
 	else if(pidServeurControleur == 0){
 		// processus gérantle serveur controleur
-	/*	char buf[5][15];
+		char buf[5][15];
 		sprintf(buf[0], "%d", msgidServeurControleur);
 
 		sprintf(buf[1], "%d", idMemPartagee[0]);
@@ -128,9 +138,15 @@ int main(int argc, char **argv)
 		sprintf(buf[4], "%d", idMemPartagee[3]);
 
 
-		execl("serveurControleur","serveurControleur", buf[0], buf[1], buf[2], buf[3], buf[4], NULL);
+		execl("../ServeurControleur/serveur","serveur", buf[0], buf[1], buf[2], buf[3], buf[4], NULL);
 		printf("Mort du serveur controleur...\n");		
-		exit(0);	*/
+		exit(0);	
+	}
+	else if(pidAffichage == 0){
+		while(1){
+			affichageCarrefours();
+			sleep(1);
+		}
 	}
 	else{
 		// pere
@@ -144,16 +160,16 @@ int main(int argc, char **argv)
 		m1.car.prioritaire=FAUX;
 		m1.type = NORD;
 	
-		mess m2;
+		/*mess m2;
 		m2.car.id = 2	;		 
 		m2.car.numCarrefour = 0; 
 		m2.car.entree = OUEST;
 		m2.car.numCarrefourFinal = 2;
-		m2.car.sortieFinale = EST;  
-  		m2.car.sortie = EST; 
-		m2.car.prioritaire=VRAI;
+		m2.car.sortieFinale = SUD;  
+  		//m2.car.sortie = EST; 
+		m2.car.prioritaire=FAUX;
 		m2.type = OUEST;
-			
+			*/
 		
 		//faire une fonction pour l'envoi d'une voiture
 
@@ -161,18 +177,23 @@ int main(int argc, char **argv)
 	//	msgsnd(msgid[m1.car.numCarrefour], &m1, sizeof(mess) - sizeof(long), 0);	
 	//	memoiresPartagees[m1.car.numCarrefour][m1.car.entree-1]++;		//-1 car non prioritaire
 
-affichageCarrefours();
+//affichageCarrefours();
 		
 		
 		//entree de la voiture 2 dans le circuit
-		msgsnd(msgid[m2.car.numCarrefour], &m2, sizeof(mess) - sizeof(long), 0);
-		pthread_mutex_lock(&memPart);
-		memoiresPartagees[m2.car.numCarrefour][m2.car.entree+3]++;		//+3 car prioritaire
-		pthread_mutex_unlock(&memPart);
-
-
-//affichageCarrefours();
 		
+		/*pthread_mutex_lock(&memPart);
+		memoiresPartagees[m2.car.numCarrefour][m2.car.entree-1]++;		//m2.car.entree+3 dans le cas d'un vehicule  prioritaire
+		pthread_mutex_unlock(&memPart);
+		
+		msgsnd(msgid[m2.car.numCarrefour], &m2, sizeof(mess) - sizeof(long), 0);*/
+		
+		/*for(i=0;i<1000;i++){
+			creerVoiture();
+		}*/		
+		//printf("affichage MAIN\n");
+		//affichageCarrefours();
+
 
 		struct sigaction action;
 		sigemptyset(&action.sa_mask);

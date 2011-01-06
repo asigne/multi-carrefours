@@ -9,10 +9,14 @@
 #include <sys/types.h>
 #include <sys/sem.h>
 
+#define MAX_TRAFFIC 50
+
+
+int AjouteTraffic(int TrafficCourant, int Carrefour, int Voie);
 
 enum
 {
-	OUEST = 0,
+	OUEST = 1,
 	SUD,
 	EST,
 	NORD
