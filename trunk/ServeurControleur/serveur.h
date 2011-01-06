@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <sys/sem.h>
 
-#define MAX_TRAFFIC 10
+#define MAX_TRAFFIC 100
 
 
 int AjouteTraffic(int TrafficCourant, int Carrefour, int Voie);

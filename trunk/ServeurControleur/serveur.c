@@ -56,7 +56,7 @@ int* shMem[4];
 
 int main(int argc, char* argv[])
 {
-	printf("LE SERVEUR CONTROLEUR EST FONCTIONNEL\n");
+	//printf("LE SERVEUR CONTROLEUR EST FONCTIONNEL\n");
 
 	if(argc != 6)
 	{
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 		shMem[i] = (int*) shmat(shmid[i], 0, 0);
 	
 	
-	printf("valeurMemPartagee %d\n", shMem[1][0]);
+	//printf("valeurMemPartagee %d\n", shMem[1][0]);
 	
 	pthread_t thread;
 	
@@ -166,8 +166,8 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 	{
 		// on est sur le bon carrefour.
 		
-		printf("> Bon carrefour : N°%d, traffic derniere voie :%d\n", 
-						Destination.idCarrefour, shMem[Origine.idCarrefour][Origine.idVoie]);
+	//	printf("> Bon carrefour : N°%d, traffic derniere voie :%d\n", 
+			//			Destination.idCarrefour, shMem[Origine.idCarrefour][Origine.idVoie]);
 		
 		// on retourne Dest qui contient le bon numéro de voie (Exit)
 		return Destination.idVoie;
@@ -248,7 +248,7 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			////////////////////////////////
 			// finalement on compare.
 			
-			printf("PathFinder Traffics : Chemin A %d  Chemin B  %d\n", CheminA.Traffic, CheminB.Traffic);
+			//printf("PathFinder Traffics : Chemin A %d  Chemin B  %d\n", CheminA.Traffic, CheminB.Traffic);
 			
 			// si les sorties sont saturées ou interdites (demitour) on prend une autre sortie.
 			if(CheminA.Traffic == -1 && CheminB.Traffic == -1)
@@ -350,7 +350,7 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			////////////////////////////////
 			// finalement on compare.
 			
-			printf("PathFinder Traffics : Chemin A %d  Chemin B  %d\n", CheminA.Traffic, CheminB.Traffic);
+		//	printf("PathFinder Traffics : Chemin A %d  Chemin B  %d\n", CheminA.Traffic, CheminB.Traffic);
 			
 			// si les sorties sont saturées ou interdites (demitour) on prend une autre sortie.
 			if(CheminA.Traffic == -1 && CheminB.Traffic == -1)
@@ -451,7 +451,7 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			////////////////////////////////
 			// finalement on compare.
 			
-			printf("PathFinder Traffics : Chemin A %d  Chemin B  %d\n", CheminA.Traffic, CheminB.Traffic);
+			//printf("PathFinder Traffics : Chemin A %d  Chemin B  %d\n", CheminA.Traffic, CheminB.Traffic);
 			
 			// si les sorties sont saturées ou interdites (demitour) on prend une autre sortie.
 			if(CheminA.Traffic == -1 && CheminB.Traffic == -1)
@@ -521,7 +521,7 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			///////////////////////////////
 			// B -> on prend vers le ouest.
 			
-			if(Origine.idVoie == EST)
+			if(Origine.idVoie == OUEST)
 			{
 				CheminB.Traffic = -1;
 			} else {
@@ -551,7 +551,7 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			////////////////////////////////
 			// finalement on compare.
 			
-			printf("PathFinder Traffics : Chemin A %d  Chemin B  %d\n", CheminA.Traffic, CheminB.Traffic);
+			//printf("PathFinder Traffics : Chemin A %d  Chemin B  %d\n", CheminA.Traffic, CheminB.Traffic);
 			
 			// si les sorties sont saturées ou interdites (demitour) on prend une autre sortie.
 			if(CheminA.Traffic == -1 && CheminB.Traffic == -1)

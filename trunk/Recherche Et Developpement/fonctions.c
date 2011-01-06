@@ -46,24 +46,24 @@ void affichageCarrefours(){
 	\n                  #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
-	\n	          # %2d|   #                    # %2d|   #          \
-	\n	########### %2d|   ###################### %2d|   ###########\
-	\n	              |   %2d %2d                    |   %2d %2d      \
+	\n	          #%3d|   #                    #%3d|   #          \
+	\n	###########%3d|   ######################%3d|   ###########\
+	\n	              |   %3d %3d                  |   %3d %3d      \
 	\n	----------------------------------------------------------\
-	\n	      %2d %2d   |                    %2d %2d   |              \
-	\n	###########   |%2d ######################   |%2d ###########\
-	\n	          #   |%2d #                    #   |%2d #          \
+	\n	    %3d %3d   |                  %3d %3d   |              \
+	\n	###########   |%3d######################   |%3d###########\
+	\n	          #   |%3d#                    #   |%3d#          \
 	\n	          #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
-	\n	          # %2d|   #                    # %2d|   #          \
-	\n	########### %2d|   ###################### %2d|   ###########\
-	\n	              |   %2d %2d                    |   %2d %2d      \
+	\n	          #%3d|   #                    #%3d|   #          \
+	\n	###########%3d|   ######################%3d|   ###########\
+	\n	              |   %3d %3d                  |   %3d %3d      \
 	\n	----------------------------------------------------------\
-	\n	      %2d %2d   |                    %2d %2d   |              \
-	\n	###########   |%2d ######################   |%2d ###########\
-	\n	          #   |%2d #                    #   |%2d #          \
+	\n	    %3d %3d   |                  %3d %3d   |              \
+	\n	###########   |%3d######################   |%3d###########\
+	\n	          #   |%3d#                    #   |%3d#          \
 	\n	          #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
@@ -338,7 +338,7 @@ void traitement(mess* message)
 		tourneGauche(message->car);
 	}
 	else{
-		printf("ERREUR: demi tour impossible %d\n", destination);
+		printf("ERREUR: demi tour impossible voiture%d, %d\n",message->car.id, message->car.numCarrefour);
 	}
 	
 	
@@ -351,18 +351,20 @@ void traitement(mess* message)
 		{
 			switch(message->car.sortie){
 			case OUEST:
-				printf("Sortie de la voiture %d par la sortie OUEST du carrefour 0\n",message->car.id);
+//				printf("Sortie de la voiture %d par la sortie OUEST du carrefour 0\n",message->car.id);
 				break;
 			case SUD:
 				numCarrefourSvt=2;
 				messageAEnvoyer.car.entree=NORD;
+				messageAEnvoyer.type=NORD;
 				break;
 			case EST:
 				numCarrefourSvt=1;
 				messageAEnvoyer.car.entree=OUEST;
+				messageAEnvoyer.type=OUEST;
 				break;
 			case NORD:
-				printf("Sortie de la voiture %d par la sortie NORD du carrefour 0\n",message->car.id);
+//				printf("Sortie de la voiture %d par la sortie NORD du carrefour 0\n",message->car.id);
 				break;
 			}
 			break;
@@ -373,16 +375,18 @@ void traitement(mess* message)
 			case OUEST:
 				numCarrefourSvt=0;
 				messageAEnvoyer.car.entree=EST;
+				messageAEnvoyer.type=EST;
 				break;
 			case SUD:
 				numCarrefourSvt=3;
 				messageAEnvoyer.car.entree=NORD;
+				messageAEnvoyer.type=NORD;
 				break;
 			case EST:
-				printf("Sortie de la voiture %d par la sortie EST du carrefour 1\n",message->car.id);
+//				printf("Sortie de la voiture %d par la sortie EST du carrefour 1\n",message->car.id);
 				break;
 			case NORD:
-				printf("Sortie de la voiture %d par la sortie NORD du carrefour 1\n",message->car.id);
+//				printf("Sortie de la voiture %d par la sortie NORD du carrefour 1\n",message->car.id);
 				break;
 			}
 			break;	
@@ -391,18 +395,20 @@ void traitement(mess* message)
 		{
 			switch(message->car.sortie){
 			case OUEST:
-				printf("Sortie de la voiture %d par la sortie OUEST du carrefour 2\n",message->car.id);
+//				printf("Sortie de la voiture %d par la sortie OUEST du carrefour 2\n",message->car.id);
 				break;
 			case SUD:
-				printf("Sortie de la voiture %d par la sortie SUD du carrefour 2\n",message->car.id);
+//				printf("Sortie de la voiture %d par la sortie SUD du carrefour 2\n",message->car.id);
 				break;
 			case EST:
 				numCarrefourSvt=3;
-				messageAEnvoyer.car.entree=OUEST;				
+				messageAEnvoyer.car.entree=OUEST;	
+				messageAEnvoyer.type=OUEST;			
 				break;
 			case NORD:
 				numCarrefourSvt=0;
 				messageAEnvoyer.car.entree=SUD;		
+				messageAEnvoyer.type=SUD;
 				break;
 			}
 			break;
@@ -412,17 +418,19 @@ void traitement(mess* message)
 			switch(message->car.sortie){
 			case OUEST:
 				numCarrefourSvt=2;		
-				messageAEnvoyer.car.entree=EST;		
+				messageAEnvoyer.car.entree=EST;
+				messageAEnvoyer.type=EST;		
 				break;
 			case SUD:
-				printf("Sortie de la voiture %d par la sortie SUD du carrefour 3\n",message->car.id);
+//				printf("Sortie de la voiture %d par la sortie SUD du carrefour 3\n",message->car.id);
 				break;
 			case EST:
-				printf("Sortie de la voiture %d par la sortie EST du carrefour 3\n",message->car.id);	
+//				printf("Sortie de la voiture %d par la sortie EST du carrefour 3\n",message->car.id);	
 				break;
 			case NORD:
 				numCarrefourSvt=1;		
-				messageAEnvoyer.car.entree=SUD;		
+				messageAEnvoyer.car.entree=SUD;	
+				messageAEnvoyer.type=SUD;	
 				break;
 			}
 			break;
@@ -465,6 +473,8 @@ void gestionCarrefour(int numCarrefour){
 			if(memoiresPartagees[numCarrefour][i]>0){
 				// choix de la file ayant le moins de voiture dans le cas ou il y a plusieurs vehicules prioritaires a un carrefour
 				if(memoiresPartagees[numCarrefour][i-4]+memoiresPartagees[numCarrefour][i]<nbVoituresFileMax){
+					//printf("carrefour %d, file %d, nb %d, nbMax%d\n",numCarrefour,i,
+					//	memoiresPartagees[numCarrefour][i-4]+memoiresPartagees[numCarrefour][i],nbVoituresFileMax);
 					numFile=i-3;	//1 OUEST, 2 SUD, 3 EST, 4 NORD
 					//nb de voitures présentes dans la file ou le véhicule prioritaire se trouve
 					nbVoituresFileMax=memoiresPartagees[numCarrefour][i-4]+memoiresPartagees[numCarrefour][i]; 
@@ -472,6 +482,8 @@ void gestionCarrefour(int numCarrefour){
 			}
 			pthread_mutex_unlock(&memPart);
 		}
+//		printf("carrefour %d, numFile %d\n",numCarrefour, numFile);
+		
 		
 		//choix de la file a traiter
 		//aucun vehicule prioritaire present numFile=-1 sinon numFile=numero de la file contenant le vehicule prioritaire
@@ -580,7 +592,8 @@ void creerVoiture(){
 				&& messageAEnvoyer.car.entree == messageAEnvoyer.car.sortieFinale);
 		break;
 	}
-	if((rand()%NbVoituresGlobal)/5==0){  
+	//if((rand()%NbVoituresGlobal)/5==0){  
+	if(rand()%50==0){  
 		messageAEnvoyer.car.prioritaire=VRAI;
 	}
 	else{

@@ -11,7 +11,7 @@
 #include <time.h>
 
 #define ID_PROJET 'P'
-#define NbVoituresGlobal 100
+#define NbVoituresGlobal 1000
 
 
 static int sem_in_out[4][2][2];
@@ -23,7 +23,7 @@ static pthread_mutex_t memPart;
 
 
 pid_t pidCarrefour[4];
-pid_t pidServeurControleur, pidAffichage;
+pid_t pidServeurControleur, pidAffichage, pidGenerateur,pidPere;
 int msgidServeurControleur;
 
 //identifiant pour les IPC
