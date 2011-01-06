@@ -42,7 +42,45 @@ void affichageCarrefour(int carrefour){
 
 void affichageCarrefours(){
 	pthread_mutex_lock(&memPart);
-	printf("\n                  #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          # %2d|   #                    # %2d|   #          \n	########### %2d|   ###################### %2d|   ###########\n	              |   %2d %2d                    |   %2d %2d      \n	----------------------------------------------------------\n	      %2d %2d   |                    %2d %2d   |              \n	###########   |%2d ######################   |%2d ###########\n	          #   |%2d #                    #   |%2d #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          # %2d|   #                    # %2d|   #          \n	########### %2d|   ###################### %2d|   ###########\n	              |   %2d %2d                    |   %2d %2d      \n	----------------------------------------------------------\n	      %2d %2d   |                    %2d %2d   |              \n	###########   |%2d ######################   |%2d ###########\n	          #   |%2d #                    #   |%2d #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n",memoiresPartagees[0][3+4],memoiresPartagees[1][3+4],memoiresPartagees[0][3],memoiresPartagees[1][3],memoiresPartagees[0][2],memoiresPartagees[0][2+4],memoiresPartagees[1][2],memoiresPartagees[1][2+4],memoiresPartagees[0][0+4],memoiresPartagees[0][0],memoiresPartagees[1][0+4],memoiresPartagees[1][0],memoiresPartagees[0][1],memoiresPartagees[1][1],memoiresPartagees[0][1+4],memoiresPartagees[1][1+4],memoiresPartagees[2][3+4],memoiresPartagees[3][3+4],memoiresPartagees[2][3],memoiresPartagees[3][3],memoiresPartagees[2][2],memoiresPartagees[2][2+4],memoiresPartagees[3][2],memoiresPartagees[3][2+4],memoiresPartagees[2][0+4],memoiresPartagees[2][0],memoiresPartagees[3][0+4],memoiresPartagees[3][0],memoiresPartagees[2][1],memoiresPartagees[3][1],memoiresPartagees[2][1+4],memoiresPartagees[3][1+4]);
+	printf("\
+	\n                  #   |   #                    #   |   #          \
+	\n	          #   |   #                    #   |   #          \
+	\n	          #   |   #                    #   |   #          \
+	\n	          # %2d|   #                    # %2d|   #          \
+	\n	########### %2d|   ###################### %2d|   ###########\
+	\n	              |   %2d %2d                    |   %2d %2d      \
+	\n	----------------------------------------------------------\
+	\n	      %2d %2d   |                    %2d %2d   |              \
+	\n	###########   |%2d ######################   |%2d ###########\
+	\n	          #   |%2d #                    #   |%2d #          \
+	\n	          #   |   #                    #   |   #          \
+	\n	          #   |   #                    #   |   #          \
+	\n	          #   |   #                    #   |   #          \
+	\n	          #   |   #                    #   |   #          \
+	\n	          # %2d|   #                    # %2d|   #          \
+	\n	########### %2d|   ###################### %2d|   ###########\
+	\n	              |   %2d %2d                    |   %2d %2d      \
+	\n	----------------------------------------------------------\
+	\n	      %2d %2d   |                    %2d %2d   |              \
+	\n	###########   |%2d ######################   |%2d ###########\
+	\n	          #   |%2d #                    #   |%2d #          \
+	\n	          #   |   #                    #   |   #          \
+	\n	          #   |   #                    #   |   #          \
+	\n	          #   |   #                    #   |   #          \
+	\n",
+	memoiresPartagees[0][3+4],memoiresPartagees[1][3+4],
+	memoiresPartagees[0][3],memoiresPartagees[1][3],
+	memoiresPartagees[0][2],memoiresPartagees[0][2+4],memoiresPartagees[1][2],memoiresPartagees[1][2+4],
+	memoiresPartagees[0][0+4],memoiresPartagees[0][0],memoiresPartagees[1][0+4],memoiresPartagees[1][0],
+	memoiresPartagees[0][1],memoiresPartagees[1][1],
+	memoiresPartagees[0][1+4],memoiresPartagees[1][1+4],
+	memoiresPartagees[2][3+4],memoiresPartagees[3][3+4],
+	memoiresPartagees[2][3],memoiresPartagees[3][3],
+	memoiresPartagees[2][2],memoiresPartagees[2][2+4],memoiresPartagees[3][2],memoiresPartagees[3][2+4],
+	memoiresPartagees[2][0+4],memoiresPartagees[2][0],memoiresPartagees[3][0+4],memoiresPartagees[3][0],
+	memoiresPartagees[2][1],memoiresPartagees[3][1],
+	memoiresPartagees[2][1+4],memoiresPartagees[3][1+4]);
+	
 	pthread_mutex_unlock(&memPart);
 }
 
@@ -300,7 +338,7 @@ void traitement(mess* message)
 		tourneGauche(message->car);
 	}
 	else{
-		printf("ERREUR: demi tour impossible\n");
+		printf("ERREUR: demi tour impossible %d\n", destination);
 	}
 	
 	
