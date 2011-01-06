@@ -67,7 +67,7 @@ void affichageCarrefours(){
 	\n	          #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
-	\n",
+	\n Nombre d'échecs du au véhicules prioritaires : %d\n",
 	memoiresPartagees[0][3+4],memoiresPartagees[1][3+4],
 	memoiresPartagees[0][3],memoiresPartagees[1][3],
 	memoiresPartagees[0][2],memoiresPartagees[0][2+4],memoiresPartagees[1][2],memoiresPartagees[1][2+4],
@@ -79,7 +79,7 @@ void affichageCarrefours(){
 	memoiresPartagees[2][2],memoiresPartagees[2][2+4],memoiresPartagees[3][2],memoiresPartagees[3][2+4],
 	memoiresPartagees[2][0+4],memoiresPartagees[2][0],memoiresPartagees[3][0+4],memoiresPartagees[3][0],
 	memoiresPartagees[2][1],memoiresPartagees[3][1],
-	memoiresPartagees[2][1+4],memoiresPartagees[3][1+4]);
+	memoiresPartagees[2][1+4],memoiresPartagees[3][1+4],cptExitFaux[0]);
 	
 	pthread_mutex_unlock(&memPart);
 }
@@ -100,7 +100,6 @@ int PSem(int id){
 	op.sem_num = 0; //Numéro de notre sémaphore
 	op.sem_op = -1; //Pour un P() on décrémente
 	op.sem_flg = 0; //On ne s'en occupe pas
-	usleep(50);
     return semop(id, &op, 1); //Entrée dans la section critique P()
 }
 
@@ -338,7 +337,7 @@ void traitement(mess* message)
 		tourneGauche(message->car);
 	}
 	else{
-		printf("ERREUR: demi tour impossible voiture%d, %d\n",message->car.id, message->car.numCarrefour);
+		printf("ERREUR: demi tour impossible voie%d, carrefour%d\n",message->car.sortie, message->car.numCarrefour);
 	}
 	
 	
@@ -440,7 +439,7 @@ void traitement(mess* message)
 	//ecriture file message carrefour correspondant
 	if(numCarrefourSvt!=-1){
 		messageAEnvoyer.car.numCarrefour=numCarrefourSvt;
-		usleep(500);
+		usleep(1000);
 		//la voiture a franchit le carrefour et est envoyee au carrefour suivant
 		envoiVoiture(messageAEnvoyer);
 	}
@@ -514,7 +513,7 @@ void gestionCarrefour(int numCarrefour){
 		pthread_create(&thread_traitement[indice], NULL, (void * (*)(void *))traitement, mTemp);		
 		
 
-		usleep(5000);
+		usleep(500);
 	}
 	//destruction semaphores du carrefour
 	//destructionSem();
