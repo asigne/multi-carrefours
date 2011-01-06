@@ -513,7 +513,7 @@ void gestionCarrefour(int numCarrefour){
 		pthread_create(&thread_traitement[indice], NULL, (void * (*)(void *))traitement, mTemp);		
 		
 
-		usleep(500);
+		usleep(200);
 	}
 	//destruction semaphores du carrefour
 	//destructionSem();

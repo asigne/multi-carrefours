@@ -151,7 +151,7 @@ int main(int argc, char **argv)
 	else if(pidGenerateur == 0){
 		while(1){
 			creerVoiture();
-			usleep(500);
+			usleep(50);
 		}
 	}
 	else{

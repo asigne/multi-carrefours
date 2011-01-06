@@ -11,7 +11,7 @@
 */
 
 #include "fonctions.h"
-#define MAX_TRAFFIC NbVoituresGlobal/100
+#define MAX_TRAFFIC 75
 
 
 enum
