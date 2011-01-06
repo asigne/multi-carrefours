@@ -50,31 +50,42 @@ void affichageCarrefour(int carrefour){
 
 
 void affichageCarrefours(){
-/*char *tabChar[4][4];
+char* tabChar[4][8];
+//tabChar = new char[4];//[8];
+//char* tabChar = (mess*) malloc(sizeof(mess));
 char buffer[3];
+char* maValeur;
 
+maValeur="aa";
 
-	int i,j;
-	for(i=0;i<4;i++){
-		for(j=0;j<4;j++){
-			
-			
-			if(memoiresPartagees[i][j]<10){
-				sprintf(buffer, "%d ", memoiresPartagees[i][j]	);
-			}
-			else{
-				sprintf(buffer, "%d", memoiresPartagees[i][j]);
-			}	
-			tabChar[i][j]=buffer;
+int i,j;
+for(i=0;i<4;i++){
+	for(j=0;j<8;j++){
+		if(memoiresPartagees[i][j]<10){
+			sprintf(buffer, "%d ", memoiresPartagees[i][j]	);
 		}	
-	}
+		else{
+			sprintf(buffer, "%d", memoiresPartagees[i][j]);
+		}	
+		tabChar[i][j]=buffer;
+				
+		maValeur=buffer;
+		//printf("i%d, j%d, int %d, char %s\n", i,j,memoiresPartagees[i][j],tabChar[i][j]);
+	}	
+}
 
+
+
+
+/*
+printf("##%s##\n",tabChar[0][0]);
+printf("##  ##\n");
 */
-/*	printf("\n                  #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	########### %d|   ###################### %d|   ###########\n	              |   %d                       |   %d         \n	----------------------------------------------------------\n	         %d   |                       %d   |              \n	###########   |%d ######################   |%d ###########\n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	########### %d|   ###################### %d|   ###########\n	              |   %d                       |   %d         \n	----------------------------------------------------------\n	         %d   |                       %d   |              \n	###########   |%d ######################   |%d ###########\n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n",memoiresPartagees[0][3],memoiresPartagees[1][3],memoiresPartagees[0][2],memoiresPartagees[1][2],memoiresPartagees[0][0],memoiresPartagees[1][0],memoiresPartagees[0][1],memoiresPartagees[1][1],memoiresPartagees[2][3],memoiresPartagees[3][3],memoiresPartagees[2][2],memoiresPartagees[3][2],memoiresPartagees[2][0],memoiresPartagees[3][0],memoiresPartagees[2][1],memoiresPartagees[3][1]);
-}*/
-pthread_mutex_lock(&memPart);
-printf("\n                  #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          # %d|   #                    # %d|   #          \n	########### %d|   ###################### %d|   ###########\n	              |   %d %d                    |   %d %d      \n	----------------------------------------------------------\n	      %d %d   |                    %d %d   |              \n	###########   |%d ######################   |%d ###########\n	          #   |%d #                    #   |%d #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          # %d|   #                    # %d|   #          \n	########### %d|   ###################### %d|   ###########\n	              |   %d %d                    |   %d %d      \n	----------------------------------------------------------\n	      %d %d   |                    %d %d   |              \n	###########   |%d ######################   |%d ###########\n	          #   |%d #                    #   |%d #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n",memoiresPartagees[0][3+4],memoiresPartagees[1][3+4],memoiresPartagees[0][3],memoiresPartagees[1][3],memoiresPartagees[0][2],memoiresPartagees[0][2+4],memoiresPartagees[1][2],memoiresPartagees[1][2+4],memoiresPartagees[0][0+4],memoiresPartagees[0][0],memoiresPartagees[1][0+4],memoiresPartagees[1][0],memoiresPartagees[0][1],memoiresPartagees[1][1],memoiresPartagees[0][1+4],memoiresPartagees[1][1+4],memoiresPartagees[2][3+4],memoiresPartagees[3][3+4],memoiresPartagees[2][3],memoiresPartagees[3][3],memoiresPartagees[2][2],memoiresPartagees[2][2+4],memoiresPartagees[3][2],memoiresPartagees[3][2+4],memoiresPartagees[2][0+4],memoiresPartagees[2][0],memoiresPartagees[3][0+4],memoiresPartagees[3][0],memoiresPartagees[2][1],memoiresPartagees[3][1],memoiresPartagees[2][1+4],memoiresPartagees[3][1+4]);
+/*printf("\n                  #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          # %s|   #                    # %s|   #          \n	########### %s|   ###################### %s|   ###########\n	              |   %s %s                    |   %s %s      \n	----------------------------------------------------------\n	      %s %s   |                    %s %s   |              \n	###########   |%s ######################   |%s ###########\n	          #   |%s #                    #   |%s #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          # %s|   #                    # %s|   #          \n	########### %s|   ###################### %s|   ###########\n	              |   %s %s                    |   %s %s      \n	----------------------------------------------------------\n	      %s %s   |                    %s %s   |              \n	###########   |%s ######################   |%s ###########\n	          #   |%s #                    #   |%s #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n",tabChar[0][3+4],tabChar[1][3+4],tabChar[0][3],tabChar[1][3],tabChar[0][2],tabChar[0][2+4],tabChar[1][2],tabChar[1][2+4],tabChar[0][0+4],tabChar[0][0],tabChar[1][0+4],tabChar[1][0],tabChar[0][1],tabChar[1][1],tabChar[0][1+4],tabChar[1][1+4],tabChar[2][3+4],tabChar[3][3+4],tabChar[2][3],tabChar[3][3],tabChar[2][2],tabChar[2][2+4],tabChar[3][2],tabChar[3][2+4],tabChar[2][0+4],tabChar[2][0],tabChar[3][0+4],tabChar[3][0],tabChar[2][1],tabChar[3][1],tabChar[2][1+4],tabChar[3][1+4]);*/
 
+pthread_mutex_lock(&memPart);
+
+printf("\n                  #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          # %2d|   #                    # %2d|   #          \n	########### %2d|   ###################### %2d|   ###########\n	              |   %2d %2d                    |   %2d %2d      \n	----------------------------------------------------------\n	      %2d %2d   |                    %2d %2d   |              \n	###########   |%2d ######################   |%2d ###########\n	          #   |%2d #                    #   |%2d #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          # %2d|   #                    # %2d|   #          \n	########### %2d|   ###################### %2d|   ###########\n	              |   %2d %2d                    |   %2d %2d      \n	----------------------------------------------------------\n	      %2d %2d   |                    %2d %2d   |              \n	###########   |%2d ######################   |%2d ###########\n	          #   |%2d #                    #   |%2d #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n	          #   |   #                    #   |   #          \n",memoiresPartagees[0][3+4],memoiresPartagees[1][3+4],memoiresPartagees[0][3],memoiresPartagees[1][3],memoiresPartagees[0][2],memoiresPartagees[0][2+4],memoiresPartagees[1][2],memoiresPartagees[1][2+4],memoiresPartagees[0][0+4],memoiresPartagees[0][0],memoiresPartagees[1][0+4],memoiresPartagees[1][0],memoiresPartagees[0][1],memoiresPartagees[1][1],memoiresPartagees[0][1+4],memoiresPartagees[1][1+4],memoiresPartagees[2][3+4],memoiresPartagees[3][3+4],memoiresPartagees[2][3],memoiresPartagees[3][3],memoiresPartagees[2][2],memoiresPartagees[2][2+4],memoiresPartagees[3][2],memoiresPartagees[3][2+4],memoiresPartagees[2][0+4],memoiresPartagees[2][0],memoiresPartagees[3][0+4],memoiresPartagees[3][0],memoiresPartagees[2][1],memoiresPartagees[3][1],memoiresPartagees[2][1+4],memoiresPartagees[3][1+4]);
 pthread_mutex_unlock(&memPart);
 }
 
@@ -167,10 +178,10 @@ int numCarrefour=v.numCarrefour;
 		}
 	}
 	PSem(sem_in_out[numCarrefour][ligne][colonne]);
-	printf("%d P %d, %d\n",v.id, ligne, colonne);
+	//printf("%d P %d, %d\n",v.id, ligne, colonne);
 	//printf("envoie voiture dans le tube correspondant\n");		
 	VSem(sem_in_out[numCarrefour][ligne][colonne]);
-	printf("%d V %d, %d\n",v.id, ligne, colonne);	
+	//printf("%d V %d, %d\n",v.id, ligne, colonne);	
 }
 
 void enFace(voiture v){
@@ -217,33 +228,33 @@ void enFace(voiture v){
 	if(lDeb==lFin){
 		int C, L;
 		PSem(sem_in_out[numCarrefour][lDeb][cDeb]);
-			printf("%d P %d, %d\n",v.id, lDeb, cDeb);
+			//printf("%d P %d, %d\n",v.id, lDeb, cDeb);
 		
 		for(C=cDeb+1*k;C*k<=cFin*k;C=C+k){
 			PSem(sem_in_out[numCarrefour][lDeb][C]);
-			printf("%d P %d, %d\n",v.id, lDeb, C);					
+			//printf("%d P %d, %d\n",v.id, lDeb, C);					
 			VSem(sem_in_out[numCarrefour][lDeb][C-1*k]);
-			printf("%d V %d, %d\n",v.id, lDeb, C-1*k);				
+			//printf("%d V %d, %d\n",v.id, lDeb, C-1*k);				
 		}
 
 		//printf("envoie voiture dans le tube correspondant\n");		
 
 		VSem(sem_in_out[numCarrefour][lFin][cFin]);
-		printf("%d V %d, %d\n",v.id, lFin, cFin);
+		//printf("%d V %d, %d\n",v.id, lFin, cFin);
 	}
 	else{	
 		int C, L;
 		PSem(sem_in_out[numCarrefour][lDeb][cDeb]);
-			printf("%d P %d, %d\n",v.id, lDeb, cDeb);
+			//printf("%d P %d, %d\n",v.id, lDeb, cDeb);
 		for(L=lDeb+1*k;L*k<=lFin*k;L=L+k){
 			PSem(sem_in_out[numCarrefour][L][cFin]);
-			printf("%d P %d, %d\n",v.id, L, cFin);
+			//printf("%d P %d, %d\n",v.id, L, cFin);
 			VSem(sem_in_out[numCarrefour][L-1*k][cFin]);
-			printf("%d V %d, %d\n",v.id, L-1*k, cFin);
+			//printf("%d V %d, %d\n",v.id, L-1*k, cFin);
 		}
 		//printf("envoie voiture dans le tube correspondant\n");		
 		VSem(sem_in_out[numCarrefour][lFin][cFin]);
-		printf("%d V %d, %d\n",v.id, lFin, cFin);
+		//printf("%d V %d, %d\n",v.id, lFin, cFin);
 	}
 }
 
@@ -296,47 +307,47 @@ void tourneGauche(voiture v){
 	if(k!=m){
 		int C, L;
 		PSem(sem_in_out[numCarrefour][lDeb][cDeb]);
-			printf("%d P %d, %d\n",v.id, lDeb, cDeb); 
+			//printf("%d P %d, %d\n",v.id, lDeb, cDeb); 
 		for(C=cDeb+1*k;C*k<=cFin*k;C=C+k){
 			PSem(sem_in_out[numCarrefour][lDeb][C]);
-			printf("%d P %d, %d\n",v.id, lDeb, C);
+			//printf("%d P %d, %d\n",v.id, lDeb, C);
 			VSem(sem_in_out[numCarrefour][lDeb][C-1*k]);
-			printf("%d V %d, %d\n",v.id, lDeb, C-1*k);				
+			//printf("%d V %d, %d\n",v.id, lDeb, C-1*k);				
 		}
 		
 		for(L=lDeb+1*m;L*m<=lFin*m;L=L+m){
 			PSem(sem_in_out[numCarrefour][L][cFin]);
-			printf("%d P %d, %d\n",v.id, L, cFin);
+			//printf("%d P %d, %d\n",v.id, L, cFin);
 			VSem(sem_in_out[numCarrefour][L-1*m][cFin]);
-			printf("%d V %d, %d\n",v.id, L-1*m, cFin);
+			//printf("%d V %d, %d\n",v.id, L-1*m, cFin);
 		}
 		//envoie dans tube
 		//printf("envoie voiture dans le tube correspondant\n");		
 		VSem(sem_in_out[numCarrefour][lFin][cFin]);
-		printf("%d V %d, %d\n",v.id, lFin, cFin);
+		//printf("%d V %d, %d\n",v.id, lFin, cFin);
 	}
 	else{	
 		int C, L;
 		PSem(sem_in_out[numCarrefour][lDeb][cDeb]);
-		printf("%d P %d, %d\n",v.id, lDeb, cDeb);
+		//printf("%d P %d, %d\n",v.id, lDeb, cDeb);
 
 		for(L=lDeb+1*m;L*m<=lFin*m;L=L+m){
 			PSem(sem_in_out[numCarrefour][L][cDeb]);
-			printf("%d P %d, %d\n",v.id, L, cDeb); 
+			//printf("%d P %d, %d\n",v.id, L, cDeb); 
 			VSem(sem_in_out[numCarrefour][L-1*m][cDeb]);
-			printf("%d V %d, %d\n",v.id, L-1*m, cDeb);
+			//printf("%d V %d, %d\n",v.id, L-1*m, cDeb);
 		}
 		for(C=cDeb+1*k;C*k<=cFin*k;C=C+k){
 			PSem(sem_in_out[numCarrefour][lFin][C]);
-			printf("%d P %d, %d\n",v.id, lFin, C);
+			//printf("%d P %d, %d\n",v.id, lFin, C);
 			VSem(sem_in_out[numCarrefour][lFin][C-1*k]);
-			printf("%d V %d, %d\n",v.id, lFin, C-1*k);				
+			//printf("%d V %d, %d\n",v.id, lFin, C-1*k);				
 		}
 
 		//envoie dans tube
 		//printf("envoie voiture dans le tube correspondant\n");		
 		VSem(sem_in_out[numCarrefour][lFin][cFin]);
-		printf("%d V %d, %d\n",v.id, lFin, cFin);
+		//printf("%d V %d, %d\n",v.id, lFin, cFin);
 	}
 }
 
@@ -348,8 +359,28 @@ void traitement(mess* message)
 	messageAEnvoyer.car=message->car;
 
 	//modification sortie par le serveur-controleur
+	ReqEchgeur msg;
 
-	//message->car.sortie=nouvelleSortie;
+	msg.type=1;
+	// numero du thread 
+	msg.pidEchgeur=message->car.id;
+	msg.idOrigine=message->car.numCarrefour;
+	msg.voieOrigine=message->car.entree;
+	msg.idDest=message->car.numCarrefourFinal;
+	msg.voieDest=message->car.sortieFinale;
+
+	msgsnd(msgidServeurControleur, &msg, sizeof(ReqEchgeur)-sizeof(long), 0);
+	//reception par la SC 				msgrcv(msgid, msg, sizeof(ReqEchgeur), 1, 0);
+	//message envoye par le SC			msgsnd(msgid, &Reponse, sizeof(RepCtrleur) - sizeof(long), 0);
+
+	RepCtrleur msgRep;
+
+	msgrcv(msgidServeurControleur, &msgRep, sizeof(RepCtrleur), message->car.id, 0);
+
+	message->car.sortie=msgRep.voieDest;
+
+	printf("voieDest%d\n",msgRep.voieDest);
+
 
 	printf("Entree dans le carrefour %d voiture %d par l'entree %d.\n", message->car.numCarrefour, message->car.id, message->car.entree);
 	int destination = (message->car.entree)-(message->car.sortie);
@@ -467,21 +498,27 @@ void traitement(mess* message)
 	//ecriture file message carrefour correspondant
 	if(numCarrefourSvt!=-1){
 		messageAEnvoyer.car.numCarrefour=numCarrefourSvt;
-		msgsnd(msgid[numCarrefourSvt], &messageAEnvoyer, sizeof(mess) - sizeof(long), 0);
 
 
 		//proteger par mutex
 
-		if(messageAEnvoyer.car.prioritaire==VRAI){
+		/*if(messageAEnvoyer.car.prioritaire==VRAI){
 			pthread_mutex_lock(&memPart);
+			printf("incrementation vehicule prioritaire carr%d file%d\n", messageAEnvoyer.car.numCarrefour, messageAEnvoyer.car.entree);
 			memoiresPartagees[messageAEnvoyer.car.numCarrefour][messageAEnvoyer.car.entree+3]++;
 			pthread_mutex_unlock(&memPart);
 		}
 		else{
 			pthread_mutex_lock(&memPart);
+			printf("incrementation vehicule non prioritaire carr%d file%d\n", messageAEnvoyer.car.numCarrefour, messageAEnvoyer.car.entree);
 			memoiresPartagees[messageAEnvoyer.car.numCarrefour][messageAEnvoyer.car.entree-1]++;
 			pthread_mutex_unlock(&memPart);
 		}
+		
+		
+		msgsnd(msgid[numCarrefourSvt], &messageAEnvoyer, sizeof(mess) - sizeof(long), 0);*/
+		printf("envoi voiture\n");
+		envoiVoiture(messageAEnvoyer);
 	}
 
 
@@ -495,7 +532,7 @@ void traitement(mess* message)
 
 
 void gestionCarrefour(int numCarrefour){
-	sleep(5);
+	//sleep(5);
 	int ligne,colonne;
 	pthread_t thread_traitement[4];
 
@@ -516,7 +553,7 @@ void gestionCarrefour(int numCarrefour){
 		int i, nbVoituresFile=50000, numFile=-1;
 
 
-		affichageCarrefours();
+		//affichageCarrefours();
 
 
 		////////////////////////////////////gerer le fait qu'il puisse y avoir plus voiture prioritaire dans une file???
@@ -576,12 +613,95 @@ void gestionCarrefour(int numCarrefour){
 		int retour=pthread_create(&thread_traitement[indice], NULL, (void * (*)(void *))traitement, mTemp);		
 		//printf("retour thread %d",retour);
 
-		sleep(2);
-		affichageCarrefours();
+		usleep(5000);
+		//affichageCarrefours();
 
 	}
 	//destruction semaphores du carrefour
 	destructionSem();
 }
+void envoiVoiture(mess messageAEnvoyer){
+	if(messageAEnvoyer.car.prioritaire==VRAI){
+		pthread_mutex_lock(&memPart);
+		printf("incrementation vehicule prioritaire carr%d file%d\n", messageAEnvoyer.car.numCarrefour, messageAEnvoyer.car.entree);
+		memoiresPartagees[messageAEnvoyer.car.numCarrefour][messageAEnvoyer.car.entree+3]++;
+		pthread_mutex_unlock(&memPart);
+	}
+	else{
+		pthread_mutex_lock(&memPart);
+		printf("incrementation vehicule non prioritaire carr%d file%d\n", messageAEnvoyer.car.numCarrefour, messageAEnvoyer.car.entree);
+		memoiresPartagees[messageAEnvoyer.car.numCarrefour][messageAEnvoyer.car.entree-1]++;
+		pthread_mutex_unlock(&memPart);
+	}
+
+	msgsnd(msgid[messageAEnvoyer.car.numCarrefour], &messageAEnvoyer, sizeof(mess) - sizeof(long), 0);
+}
+
+
+void creerVoiture(){
+	mess messageAEnvoyer;
+	cptVoitures++;
+	messageAEnvoyer.car.id = cptVoitures;
+			 
+	messageAEnvoyer.car.numCarrefour = rand()%4; 
+	
+	int numEntree = rand()%2;
+	switch(messageAEnvoyer.car.numCarrefour)
+	{
+		case 0:
+			messageAEnvoyer.car.entree = (numEntree+3)%4+1;
+		break;
+		case 1:
+			messageAEnvoyer.car.entree = numEntree+3;
+		break;
+		case 2:
+			messageAEnvoyer.car.entree = numEntree+1;
+		break;
+		case 3:
+			messageAEnvoyer.car.entree = numEntree+2;
+		break;
+	}
+	messageAEnvoyer.car.numCarrefourFinal = rand()%4;
+	int numSortie;
+	switch(messageAEnvoyer.car.numCarrefourFinal)
+	{
+		case 0:
+			do{
+				numSortie = rand()%2;
+				messageAEnvoyer.car.sortieFinale = (numSortie+3)%4+1;
+			}while(messageAEnvoyer.car.numCarrefour == messageAEnvoyer.car.numCarrefourFinal 
+				&& messageAEnvoyer.car.entree == messageAEnvoyer.car.sortieFinale);
+		break;
+		case 1:
+			do{
+				numSortie = rand()%2;
+				messageAEnvoyer.car.sortieFinale = numSortie+3;
+			}while(messageAEnvoyer.car.numCarrefour == messageAEnvoyer.car.numCarrefourFinal 
+				&& messageAEnvoyer.car.entree == messageAEnvoyer.car.sortieFinale);
+		break;
+		case 2:
+			do{
+				numSortie = rand()%2;
+				messageAEnvoyer.car.sortieFinale = numSortie+1;
+			}while(messageAEnvoyer.car.numCarrefour == messageAEnvoyer.car.numCarrefourFinal 
+				&& messageAEnvoyer.car.entree == messageAEnvoyer.car.sortieFinale);
+		break;
+		case 3:
+			do{
+				numSortie = rand()%2;
+				messageAEnvoyer.car.sortieFinale = numSortie+2;
+			}while(messageAEnvoyer.car.numCarrefour == messageAEnvoyer.car.numCarrefourFinal 
+				&& messageAEnvoyer.car.entree == messageAEnvoyer.car.sortieFinale);
+		break;
+	}  
+	messageAEnvoyer.car.prioritaire=FAUX;//(int)rand()%2;
+	messageAEnvoyer.type = messageAEnvoyer.car.entree;
+	//sleep(1);
+	envoiVoiture(messageAEnvoyer);
+}
+
+
+
+
 
 

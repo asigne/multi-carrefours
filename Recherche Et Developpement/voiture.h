@@ -8,7 +8,10 @@
 #include <errno.h>
 #include <sys/sem.h>
 #include <signal.h>
+#include <time.h>
+
 #define ID_PROJET 'P'
+int cptVoitures=1;
 
 static int sem_in_out[4][2][2];
 int msgid[4];
@@ -19,7 +22,7 @@ static pthread_mutex_t memPart;
 
 
 pid_t pidCarrefour[4];
-pid_t pidServeurControleur;
+pid_t pidServeurControleur, pidAffichage;
 int msgidServeurControleur;
 
 int cptIdentifiant=0;
@@ -71,6 +74,28 @@ typedef struct{
 	short sem_flg;
 } sembuf;
 
+
+
+typedef struct
+{
+	long type;
+	
+	int pidEchgeur;
+	int idOrigine;
+	int voieOrigine;
+	int idDest;
+	int voieDest;
+	
+} ReqEchgeur;
+
+typedef struct
+{
+	long type;
+	int voieDest;
+	
+} RepCtrleur;
+
+void envoiVoiture(mess messageAEnvoyer);
 
 /*int creerSem(int clef);
 void initSem(int id, int valeur);
