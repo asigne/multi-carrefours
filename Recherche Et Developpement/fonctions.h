@@ -1,3 +1,4 @@
+#include "parametrage.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -9,9 +10,6 @@
 #include <sys/sem.h>
 #include <signal.h>
 #include <time.h>
-
-#define ID_PROJET 'P'
-#define NbVoituresGlobal 1000
 
 
 static int sem_in_out[4][2][2];
@@ -29,12 +27,17 @@ int msgidServeurControleur;
 //identifiant pour les IPC
 static int cptIdentifiant=0;
 
-//compteur des identifiants de voitures
-static int cptVoitures=1;
+
 
 int idCptExitFaux;
 //compteur voiture exit "faux"
 int *cptExitFaux;
+static pthread_mutex_t mCptExitFaux;
+
+int idCptVoitures;
+//compteur de voitures
+int *cptVoitures;
+static pthread_mutex_t mCptVoitures;
 
 enum{
 	FAUX=0,

@@ -41,33 +41,36 @@ void affichageCarrefour(int carrefour){
 */
 
 void affichageCarrefours(){
+	pthread_mutex_lock(&mCptVoitures);
+	pthread_mutex_lock(&mCptExitFaux);
 	pthread_mutex_lock(&memPart);
 	printf("\
 	\n                  #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
-	\n	          #   |   #                    #   |   #          \
 	\n	          #%3d|   #                    #%3d|   #          \
+	\n	          #   |   #                    #   |   #          \
 	\n	###########%3d|   ######################%3d|   ###########\
 	\n	              |   %3d %3d                  |   %3d %3d      \
 	\n	----------------------------------------------------------\
 	\n	    %3d %3d   |                  %3d %3d   |              \
 	\n	###########   |%3d######################   |%3d###########\
+	\n	          #   |   #                    #   |   #          \
 	\n	          #   |%3d#                    #   |%3d#          \
 	\n	          #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
-	\n	          #   |   #                    #   |   #          \
-	\n	          #   |   #                    #   |   #          \
 	\n	          #%3d|   #                    #%3d|   #          \
+	\n	          #   |   #                    #   |   #          \
 	\n	###########%3d|   ######################%3d|   ###########\
 	\n	              |   %3d %3d                  |   %3d %3d      \
 	\n	----------------------------------------------------------\
 	\n	    %3d %3d   |                  %3d %3d   |              \
 	\n	###########   |%3d######################   |%3d###########\
+	\n	          #   |   #                    #   |   #          \
 	\n	          #   |%3d#                    #   |%3d#          \
 	\n	          #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
-	\n	          #   |   #                    #   |   #          \
-	\n Nombre d'échecs du au véhicules prioritaires : %d\n",
+	\n Nombre d'échecs du aux véhicules prioritaires : %d\
+	\n Nombre de voitures : %d\n",
 	memoiresPartagees[0][3+4],memoiresPartagees[1][3+4],
 	memoiresPartagees[0][3],memoiresPartagees[1][3],
 	memoiresPartagees[0][2],memoiresPartagees[0][2+4],memoiresPartagees[1][2],memoiresPartagees[1][2+4],
@@ -79,9 +82,10 @@ void affichageCarrefours(){
 	memoiresPartagees[2][2],memoiresPartagees[2][2+4],memoiresPartagees[3][2],memoiresPartagees[3][2+4],
 	memoiresPartagees[2][0+4],memoiresPartagees[2][0],memoiresPartagees[3][0+4],memoiresPartagees[3][0],
 	memoiresPartagees[2][1],memoiresPartagees[3][1],
-	memoiresPartagees[2][1+4],memoiresPartagees[3][1+4],cptExitFaux[0]);
-	
+	memoiresPartagees[2][1+4],memoiresPartagees[3][1+4],cptExitFaux[0],cptVoitures[0]-1);
 	pthread_mutex_unlock(&memPart);
+	pthread_mutex_unlock(&mCptExitFaux);
+	pthread_mutex_unlock(&mCptVoitures);
 }
 
 
@@ -454,9 +458,9 @@ void gestionCarrefour(int numCarrefour){
 	pthread_t thread_traitement[4];
 
 	//attachement aux memoires partagees des autres carrefours
-	for(i=0;i<4;i++){
+	/*for(i=0;i<4;i++){
 		memoiresPartagees[i]=(int*) shmat(idMemPartagee[i], NULL, NULL);
-	}
+	}*/
 
 	while(1){
 		//allocation mess
@@ -513,7 +517,7 @@ void gestionCarrefour(int numCarrefour){
 		pthread_create(&thread_traitement[indice], NULL, (void * (*)(void *))traitement, mTemp);		
 		
 
-		usleep(200);
+		usleep(tpsPourTraiterUneVoiture);
 	}
 	//destruction semaphores du carrefour
 	//destructionSem();
@@ -537,9 +541,11 @@ void envoiVoiture(mess messageAEnvoyer){
 
 void creerVoiture(){
 	mess messageAEnvoyer;
-	cptVoitures++;
-	messageAEnvoyer.car.id = cptVoitures;
-			 
+	pthread_mutex_lock(&mCptVoitures);
+	cptVoitures[0]++;
+	messageAEnvoyer.car.id = cptVoitures[0];
+	pthread_mutex_unlock(&mCptVoitures);		
+	 
 	messageAEnvoyer.car.numCarrefour = rand()%4; 
 	
 	int numEntree = rand()%2;
@@ -592,7 +598,7 @@ void creerVoiture(){
 		break;
 	}
 	//if((rand()%NbVoituresGlobal)/5==0){  
-	if(rand()%50==0){  
+	if(rand()%ProbabiliteVehiculePrioritaire==0){  
 		messageAEnvoyer.car.prioritaire=VRAI;
 	}
 	else{

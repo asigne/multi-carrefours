@@ -1,8 +1,19 @@
 #include "fonctions.h"
 
 void traitantSIGINT(int num){
-	printf("Interruption du programme !\n%d voitures ont été dirrigées vers des sorties non souhaitées pour faciliter la circulation des véhicules prioritaires.\n",cptExitFaux[0]);
-
+	double pourcentageReussite;
+	pthread_mutex_lock(&mCptExitFaux);
+	pthread_mutex_lock(&mCptVoitures);
+	pourcentageReussite=(1-(double)cptExitFaux[0]/((double)cptVoitures[0]-1))*100;
+	printf("\nLe pourcentage de réussite est de : %.2f\n",pourcentageReussite);
+	pthread_mutex_unlock(&mCptVoitures);
+	
+	//printf("Interruption du programme !\n%d voitures ont été dirrigées vers des sorties non souhaitées pour faciliter la circulation des véhicules prioritaires.\n",cptExitFaux[0]);
+	pthread_mutex_unlock(&mCptExitFaux);
+	
+	
+	
+	
 	//destruction des semaphores
 	int ligne,colonne,numCarrefour;
 	for(numCarrefour = 0; numCarrefour<4; numCarrefour++){
@@ -26,7 +37,6 @@ void traitantSIGINT(int num){
 int main(int argc, char **argv)
 {
 	srand(time(NULL));
-	
 	int i;
 	//creation des files de messages et des memoires partagees de chaque carrefour
 	for(i=0;i<4;i++){
@@ -48,6 +58,10 @@ int main(int argc, char **argv)
 	cptIdentifiant++;
 	cptExitFaux=(int*)shmat(idCptExitFaux, NULL, NULL);
 	
+	idCptVoitures=shmget(ftok(argv[0], ID_PROJET+cptIdentifiant), sizeof(int), IPC_CREAT | IPC_EXCL | 0777);
+	cptIdentifiant++;
+	cptVoitures=(int*)shmat(idCptVoitures, NULL, NULL);
+	
 	//initialisation des compteurs de chaque voie
 	int carrefour, numVoie;
 	pthread_mutex_lock(&memPart);
@@ -57,6 +71,11 @@ int main(int argc, char **argv)
 		}
 	}
 	pthread_mutex_unlock(&memPart);
+	
+	
+	pthread_mutex_lock(&mCptVoitures);
+	cptVoitures[0]=1;
+	pthread_mutex_unlock(&mCptVoitures);
 
 	//creation et initialisation des semaphores gerant les croisements des voitures aux carrefours
 	int numCarrefour,ligne,colonne;
@@ -77,7 +96,6 @@ int main(int argc, char **argv)
 		
 	//plateau au demarrage du programme	
 	affichageCarrefours();
-	sleep(1);
 	
 	pidPere=getpid();
 
@@ -145,13 +163,13 @@ int main(int argc, char **argv)
 	else if(pidAffichage == 0){
 		while(1){
 			affichageCarrefours();
-			usleep(500000);
+			usleep(raffraichissementAffichage);
 		}
 	}
 	else if(pidGenerateur == 0){
 		while(1){
 			creerVoiture();
-			usleep(50);
+			usleep(delaisNouvelleVoiture);
 		}
 	}
 	else{

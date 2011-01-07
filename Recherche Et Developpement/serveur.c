@@ -99,9 +99,9 @@ void serveurControleur()
 	
 	
 	// on se détache des 4 zones mémoires.
-	for(i = 0; i<4; i++)
+	/*for(i = 0; i<4; i++)
 		shmdt(memoiresPartagees[i]);
-	
+	*/
 	
 //	exit(0);
 }
@@ -109,12 +109,15 @@ void serveurControleur()
 
 int AjouteTraffic(int TrafficCourant, int Carrefour, int Voie)
 {
-	if(TrafficCourant == -1 || memoiresPartagees[Carrefour][Voie-1] > MAX_TRAFFIC)
-	{
+	pthread_mutex_lock(&memPart);
+	if(TrafficCourant == -1 || memoiresPartagees[Carrefour][Voie-1] > MAX_TRAFFIC){
+		pthread_mutex_unlock(&memPart);
 		return -1;
 	}
-	
-	return TrafficCourant + memoiresPartagees[Carrefour][Voie-1];
+	else{
+		pthread_mutex_unlock(&memPart);
+		return TrafficCourant + memoiresPartagees[Carrefour][Voie-1];
+	}
 }
 
 
@@ -253,7 +256,9 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			// si les sorties sont saturées ou interdites (demitour) on prend une autre sortie.
 			if(CheminA.Traffic == -1 && CheminB.Traffic == -1)
 			{
+				pthread_mutex_lock(&mCptExitFaux);
 				cptExitFaux[0]++;
+				pthread_mutex_unlock(&mCptExitFaux);
 				if(Origine.idVoie == NORD){
 					return OUEST;
 				}
@@ -359,7 +364,9 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			// si les sorties sont saturées ou interdites (demitour) on prend une autre sortie.
 			if(CheminA.Traffic == -1 && CheminB.Traffic == -1)
 			{
+				pthread_mutex_lock(&mCptExitFaux);
 				cptExitFaux[0]++;
+				pthread_mutex_unlock(&mCptExitFaux);
 				if(Origine.idVoie == NORD){
 					return EST;
 				}
@@ -464,7 +471,9 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			// si les sorties sont saturées ou interdites (demitour) on prend une autre sortie.
 			if(CheminA.Traffic == -1 && CheminB.Traffic == -1)
 			{
+				pthread_mutex_lock(&mCptExitFaux);
 				cptExitFaux[0]++;
+				pthread_mutex_unlock(&mCptExitFaux);
 				if(Origine.idVoie == SUD){
 					return OUEST;
 				}
@@ -568,7 +577,9 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			// si les sorties sont saturées ou interdites (demitour) on prend une autre sortie.
 			if(CheminA.Traffic == -1 && CheminB.Traffic == -1)
 			{
+				pthread_mutex_lock(&mCptExitFaux);
 				cptExitFaux[0]++;
+				pthread_mutex_unlock(&mCptExitFaux);
 				if(Origine.idVoie == SUD){
 					return EST;
 				}

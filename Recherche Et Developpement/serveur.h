@@ -11,7 +11,6 @@
 */
 
 #include "fonctions.h"
-#define MAX_TRAFFIC 75
 
 
 enum
