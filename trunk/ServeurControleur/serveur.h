@@ -1,6 +1,6 @@
 #ifndef _SERVEUR_CONTROLEUR_
 #define _SERVEUR_CONTROLEUR_
-
+/*
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,20 +8,11 @@
 #include <sys/msg.h>
 #include <sys/types.h>
 #include <sys/sem.h>
+*/
+
+#include "fonctions.h"
 
 #define MAX_TRAFFIC 100
-
-
-int AjouteTraffic(int TrafficCourant, int Carrefour, int Voie);
-
-enum
-{
-	OUEST = 1,
-	SUD,
-	EST,
-	NORD
-};
-
 
 enum
 {
@@ -31,29 +22,6 @@ enum
 	CARREFOUR_SE
 };
 
-
-typedef struct
-{
-	long type;
-	
-	int pidEchgeur;
-	int idOrigine;
-	int voieOrigine;
-	int idDest;
-	int voieDest;
-	
-} ReqEchgeur;
-
-
-typedef struct
-{
-	long type;
-	
-	int voieDest;
-	
-} RepCtrleur;
-
-
 typedef struct
 {
 	int idCarrefour;
@@ -61,6 +29,19 @@ typedef struct
 	int Traffic;
 } Traffic;
 
+
+int msgidServeur;
+int shmidServeur[4];
+int* shMemServeur[4];
+
+
+void* AnalyseTraffic(ReqEchgeur*);
+
+int chemin_plus_rapide(Traffic , Traffic );
+
+int AjouteTraffic(int , int , int );
+
+void serveurControleur(int , int , int , int , int );
 
 #endif
 

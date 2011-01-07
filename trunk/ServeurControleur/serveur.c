@@ -44,39 +44,35 @@ L'accès est protégé par des sémaphores afin d'éviter les accès concurentie
 */
 
 // fonction "Thread" de calcul
-void* AnalyseTraffic(ReqEchgeur*);
-
-int chemin_plus_rapide(Traffic Origine, Traffic Destination);
 
 
-int msgid;
-int shmid[4];
-int* shMem[4];
 
 
-int main(int argc, char* argv[])
+
+//int main(int argc, char* argv[])
+void serveurControleur(int msgidServeur, int shmidServeur[0], int shmidServeur[1], int shmidServeur[2], int shmidServeur[3])
 {
 	//printf("LE SERVEUR CONTROLEUR EST FONCTIONNEL\n");
 
-	if(argc != 6)
+/*	if(argc != 6)
 	{
-		printf("Arguments manquants : ./Serveur msgid shmid0 shmid1 shmid2 shmid3\n");
+		printf("Arguments manquants : ./Serveur msgidServeur shmidServeur0 shmidServeur1 shmidServeur2 shmidServeur3\n");
 		exit(1);
 	}
 	
-	msgid = atoi(argv[1]);
-	shmid[0] = atoi(argv[2]);
-	shmid[1] = atoi(argv[3]);
-	shmid[2] = atoi(argv[4]);
-	shmid[3] = atoi(argv[5]);
+	msgidServeur = atoi(argv[1]);
+	shmidServeur[0] = atoi(argv[2]);
+	shmidServeur[1] = atoi(argv[3]);
+	shmidServeur[2] = atoi(argv[4]);
+	shmidServeur[3] = atoi(argv[5]);*/
 	
 	// on s'attache au 4 zones mémoires.
 	int i;
 	for(i = 0; i<4; i++)
-		shMem[i] = (int*) shmat(shmid[i], 0, 0);
+		shMemServeur[i] = (int*) shmat(shmidServeur[i], 0, 0);
 	
 	
-	//printf("valeurMemPartagee %d\n", shMem[1][0]);
+	//printf("valeurMemPartagee %d\n", shMemServeur[1][0]);
 	
 	pthread_t thread;
 	
@@ -85,7 +81,7 @@ int main(int argc, char* argv[])
 		ReqEchgeur* msg = (ReqEchgeur*) malloc(sizeof(ReqEchgeur));
 		
 		// type = 1, messages pour le serveur.
-		msgrcv(msgid, msg, sizeof(ReqEchgeur), 1, 0);
+		msgrcv(msgidServeur, msg, sizeof(ReqEchgeur), 1, 0);
 		
 		// message de fermeture, pid=0
 		if(msg->pidEchgeur == 0)
@@ -100,21 +96,21 @@ int main(int argc, char* argv[])
 	
 	// on se détache des 4 zones mémoires.
 	for(i = 0; i<4; i++)
-		shmdt(shMem[i]);
+		shmdt(shMemServeur[i]);
 	
 	
-	exit(0);
+//	exit(0);
 }
 
 
 int AjouteTraffic(int TrafficCourant, int Carrefour, int Voie)
 {
-	if(TrafficCourant == -1 || shMem[Carrefour][Voie-1] > MAX_TRAFFIC)
+	if(TrafficCourant == -1 || shMemServeur[Carrefour][Voie-1] > MAX_TRAFFIC)
 	{
 		return -1;
 	}
 	
-	return TrafficCourant + shMem[Carrefour][Voie-1];
+	return TrafficCourant + shMemServeur[Carrefour][Voie-1];
 }
 
 
@@ -142,7 +138,7 @@ void* AnalyseTraffic(ReqEchgeur* req)
 	Reponse.type = req->pidEchgeur;
 	Reponse.voieDest = idVoieAPrendre;
 	
-	msgsnd(msgid, &Reponse, sizeof(RepCtrleur) - sizeof(long), 0);
+	msgsnd(msgidServeur, &Reponse, sizeof(RepCtrleur) - sizeof(long), 0);
 	
 	
 	// liberation du message.
@@ -167,7 +163,7 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 		// on est sur le bon carrefour.
 		
 	//	printf("> Bon carrefour : N°%d, traffic derniere voie :%d\n", 
-			//			Destination.idCarrefour, shMem[Origine.idCarrefour][Origine.idVoie]);
+			//			Destination.idCarrefour, shMemServeur[Origine.idCarrefour][Origine.idVoie]);
 		
 		// on retourne Dest qui contient le bon numéro de voie (Exit)
 		return Destination.idVoie;
@@ -182,8 +178,8 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			Traffic CheminA, CheminB;
 			
-			CheminA.Traffic = 0; // shMem[Origine.idCarrefour][Origine.idVoie];
-			CheminB.Traffic = 0; // shMem[Origine.idCarrefour][Origine.idVoie];
+			CheminA.Traffic = 0; // shMemServeur[Origine.idCarrefour][Origine.idVoie];
+			CheminB.Traffic = 0; // shMemServeur[Origine.idCarrefour][Origine.idVoie];
 			
 			///////////////////////////////
 			// A -> on prend vers l'est.
@@ -283,8 +279,8 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			Traffic CheminA, CheminB;
 			
-			CheminA.Traffic = 0; // shMem[Origine.idCarrefour, Origine.idVoie];
-			CheminB.Traffic = 0; // shMem[Origine.idCarrefour, Origine.idVoie];
+			CheminA.Traffic = 0; // shMemServeur[Origine.idCarrefour, Origine.idVoie];
+			CheminB.Traffic = 0; // shMemServeur[Origine.idCarrefour, Origine.idVoie];
 			
 			///////////////////////////////
 			// A -> on prend vers l'ouest.
@@ -384,8 +380,8 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			Traffic CheminA, CheminB;
 			
-			CheminA.Traffic = 0; // shMem[Origine.idCarrefour, Origine.idVoie];
-			CheminB.Traffic = 0; // shMem[Origine.idCarrefour, Origine.idVoie];
+			CheminA.Traffic = 0; // shMemServeur[Origine.idCarrefour, Origine.idVoie];
+			CheminB.Traffic = 0; // shMemServeur[Origine.idCarrefour, Origine.idVoie];
 			
 			///////////////////////////////
 			// A -> on prend vers le nord.
@@ -485,8 +481,8 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			Traffic CheminA, CheminB;
 			
-			CheminA.Traffic = 0; // shMem[Origine.idCarrefour, Origine.idVoie];
-			CheminB.Traffic = 0; // shMem[Origine.idCarrefour, Origine.idVoie];
+			CheminA.Traffic = 0; // shMemServeur[Origine.idCarrefour, Origine.idVoie];
+			CheminB.Traffic = 0; // shMemServeur[Origine.idCarrefour, Origine.idVoie];
 			
 			///////////////////////////////
 			// A -> on prend vers le nord.
