@@ -4,7 +4,7 @@ void traitantSIGINT(int num){
 	double pourcentageReussite;
 	pthread_mutex_lock(&mCptExitFaux);
 	pthread_mutex_lock(&mCptVoitures);
-	pourcentageReussite=(1-(double)cptExitFaux[0]/((double)cptVoitures[0]-1))*100;
+	pourcentageReussite=(1-(double)cptExitFaux[0]/((double)cptVoitures[VRAI]+(double)cptVoitures[FAUX]))*100;
 	printf("\nLe pourcentage de réussite est de : %.2f\n",pourcentageReussite);
 	pthread_mutex_unlock(&mCptVoitures);
 	
@@ -30,6 +30,7 @@ void traitantSIGINT(int num){
 		msgctl(msgid[i],IPC_RMID, NULL);
 	}
 	shmctl(idCptExitFaux, IPC_RMID, NULL);
+	shmctl(idCptVoitures, IPC_RMID, NULL);
 	msgctl(msgidServeurControleur, IPC_RMID, NULL);
 	//raise(SIGTERM);
 }

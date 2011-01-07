@@ -26,6 +26,8 @@ int msgidServeurControleur;
 
 //identifiant pour les IPC
 static int cptIdentifiant=0;
+//identifiant pour les voitures
+static int cptVoituresId=1;
 
 
 
@@ -33,6 +35,8 @@ int idCptExitFaux;
 //compteur voiture exit "faux"
 int *cptExitFaux;
 static pthread_mutex_t mCptExitFaux;
+
+
 
 int idCptVoitures;
 //compteur de voitures
