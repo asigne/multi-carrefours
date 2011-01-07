@@ -352,26 +352,29 @@ void traitement(mess* message)
  
     if (fichier != NULL)
     {
+	    fprintf(fichier, "\tSortie de la voiture %d ",message->car.id);
 		//recherche du carrefour suivant et de l'entree correspondante
 		switch(message->car.numCarrefour){
 			case 0:	//carrefour NO
 			{
 				switch(message->car.sortie){
 				case OUEST:
-					fprintf(fichier, "Sortie de la voiture %d par la sortie OUEST du carrefour 0\n",message->car.id);
+					fprintf(fichier, "par l'OUEST du carrefour 0 : FIN du parcours\n");
 					break;
 				case SUD:
 					numCarrefourSvt=2;
 					messageAEnvoyer.car.entree=NORD;
 					messageAEnvoyer.type=NORD;
+					fprintf(fichier, "par le SUD du carrefour 0\n");
 					break;
 				case EST:
 					numCarrefourSvt=1;
 					messageAEnvoyer.car.entree=OUEST;
 					messageAEnvoyer.type=OUEST;
+					fprintf(fichier, "par l'EST du carrefour 0\n");
 					break;
 				case NORD:
-					fprintf(fichier, "Sortie de la voiture %d par la sortie NORD du carrefour 0\n",message->car.id);
+					fprintf(fichier, "par le NORD du carrefour 0 : FIN du parcours\n");
 					break;
 				}
 				break;
@@ -383,17 +386,19 @@ void traitement(mess* message)
 					numCarrefourSvt=0;
 					messageAEnvoyer.car.entree=EST;
 					messageAEnvoyer.type=EST;
+					fprintf(fichier, "par l'OUEST du carrefour 1\n");
 					break;
 				case SUD:
 					numCarrefourSvt=3;
 					messageAEnvoyer.car.entree=NORD;
 					messageAEnvoyer.type=NORD;
+					fprintf(fichier, "par le SUD du carrefour 1\n");
 					break;
 				case EST:
-					fprintf(fichier, "Sortie de la voiture %d par la sortie EST du carrefour 1\n",message->car.id);
+					fprintf(fichier, "par l'EST du carrefour 1 : FIN du parcours\n");
 					break;
 				case NORD:
-					fprintf(fichier, "Sortie de la voiture %d par la sortie NORD du carrefour 1\n",message->car.id);
+					fprintf(fichier, "par le NORD du carrefour 1 : FIN du parcours\n");
 					break;
 				}
 				break;	
@@ -402,20 +407,22 @@ void traitement(mess* message)
 			{
 				switch(message->car.sortie){
 				case OUEST:
-					fprintf(fichier, "Sortie de la voiture %d par la sortie OUEST du carrefour 2\n",message->car.id);
+					fprintf(fichier, "par l'OUEST du carrefour 2 : FIN du parcours\n");
 					break;
 				case SUD:
-					fprintf(fichier, "Sortie de la voiture %d par la sortie SUD du carrefour 2\n",message->car.id);
+					fprintf(fichier, "par le SUD du carrefour 2 : FIN du parcours\n");
 					break;
 				case EST:
 					numCarrefourSvt=3;
 					messageAEnvoyer.car.entree=OUEST;	
-					messageAEnvoyer.type=OUEST;			
+					messageAEnvoyer.type=OUEST;	
+					fprintf(fichier, "par l'EST du carrefour 2\n");		
 					break;
 				case NORD:
 					numCarrefourSvt=0;
 					messageAEnvoyer.car.entree=SUD;		
 					messageAEnvoyer.type=SUD;
+					fprintf(fichier, "par le NORD du carrefour 2\n");
 					break;
 				}
 				break;
@@ -426,18 +433,20 @@ void traitement(mess* message)
 				case OUEST:
 					numCarrefourSvt=2;		
 					messageAEnvoyer.car.entree=EST;
-					messageAEnvoyer.type=EST;		
+					messageAEnvoyer.type=EST;
+					fprintf(fichier, "par l'OUEST du carrefour 3\n");		
 					break;
 				case SUD:
-					fprintf(fichier, "Sortie de la voiture %d par la sortie SUD du carrefour 3\n",message->car.id);
+					fprintf(fichier, "par le SUD du carrefour 3 : FIN du parcours\n");
 					break;
 				case EST:
-					fprintf(fichier, "Sortie de la voiture %d par la sortie EST du carrefour 3\n",message->car.id);	
+					fprintf(fichier, "par l'EST du carrefour 3 : FIN du parcours\n");	
 					break;
 				case NORD:
 					numCarrefourSvt=1;		
 					messageAEnvoyer.car.entree=SUD;	
 					messageAEnvoyer.type=SUD;	
+					fprintf(fichier, "par le NORD du carrefour 3\n");
 					break;
 				}
 				break;
@@ -449,7 +458,7 @@ void traitement(mess* message)
 	//ecriture file message carrefour correspondant
 	if(numCarrefourSvt!=-1){
 		messageAEnvoyer.car.numCarrefour=numCarrefourSvt;
-		usleep(1000);
+		usleep(tpsPourTraiterUneVoiture);
 		//la voiture a franchit le carrefour et est envoyee au carrefour suivant
 		envoiVoiture(messageAEnvoyer);
 	}
@@ -540,8 +549,29 @@ void envoiVoiture(mess messageAEnvoyer){
 		memoiresPartagees[messageAEnvoyer.car.numCarrefour][messageAEnvoyer.car.entree-1]++;
 		pthread_mutex_unlock(&memPart);
 	}
-
+	
+	FILE* fichier1 = NULL;
+    fichier1 = fopen("log.txt", "a+");
+ 
+    if (fichier1 != NULL)
+    {
+    	fprintf(fichier1, "\tEntrée de la voiture %d",messageAEnvoyer.car.id);
+		if(messageAEnvoyer.car.entree==1 || messageAEnvoyer.car.entree==5){
+			fprintf(fichier1, " par l'OUEST du carrefour %d\n", messageAEnvoyer.car.numCarrefour);
+		}
+		else if(messageAEnvoyer.car.entree==2 || messageAEnvoyer.car.entree==6){
+			fprintf(fichier1, " par le SUD du carrefour %d\n", messageAEnvoyer.car.numCarrefour);
+		}
+		else if(messageAEnvoyer.car.entree==3 || messageAEnvoyer.car.entree==7){
+			fprintf(fichier1, " par l'EST du carrefour %d\n", messageAEnvoyer.car.numCarrefour);
+		}
+		else if(messageAEnvoyer.car.entree==4 || messageAEnvoyer.car.entree==8){
+			fprintf(fichier1, " par le NORD du carrefour %d\n", messageAEnvoyer.car.numCarrefour);
+		}
+		fclose(fichier1);
+	}
 	msgsnd(msgid[messageAEnvoyer.car.numCarrefour], &messageAEnvoyer, sizeof(mess) - sizeof(long), 0);
+	
 }
 
 
@@ -616,6 +646,26 @@ void creerVoiture(){
 		pthread_mutex_unlock(&mCptVoitures);
 	}
 	messageAEnvoyer.type = messageAEnvoyer.car.entree;
+	FILE* fichier2 = NULL;
+    fichier2 = fopen("log.txt", "a+");
+ 
+    if (fichier2 != NULL)
+    {
+    	fprintf(fichier2, "CREATION Voiture %d",messageAEnvoyer.car.id);
+    	if(messageAEnvoyer.car.sortieFinale==1 || messageAEnvoyer.car.sortieFinale==5){
+			fprintf(fichier2, " : elle doit sortir du cricuit par l'OUEST du carrefour : %d\n", messageAEnvoyer.car.numCarrefourFinal);
+		}
+		else if(messageAEnvoyer.car.sortieFinale==2 || messageAEnvoyer.car.sortieFinale==6){
+			fprintf(fichier2, " : elle doit sortir du cricuit par le SUD du carrefour : %d\n", messageAEnvoyer.car.numCarrefourFinal);
+		}
+		else if(messageAEnvoyer.car.sortieFinale==3 || messageAEnvoyer.car.sortieFinale==7){
+			fprintf(fichier2, " : elle doit sortir du cricuit par l'EST du carrefour : %d\n", messageAEnvoyer.car.numCarrefourFinal);	
+		}
+		else if(messageAEnvoyer.car.sortieFinale==4 || messageAEnvoyer.car.sortieFinale==8){
+			fprintf(fichier2, " : elle doit sortir du cricuit par le NORD du carrefour : %d\n", messageAEnvoyer.car.numCarrefourFinal);
+		}
+		fclose(fichier2);
+	}
 	envoiVoiture(messageAEnvoyer);
 }
 
