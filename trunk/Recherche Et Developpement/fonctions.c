@@ -70,7 +70,8 @@ void affichageCarrefours(){
 	\n	          #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
 	\n Nombre d'échecs du aux véhicules prioritaires : %d\
-	\n Nombre de voitures : %d\n",
+	\n Nombre de véhicules \"classiques\": %d\
+	\n Nombre de véhicules \"prioritaires\": %d\n",
 	memoiresPartagees[0][3+4],memoiresPartagees[1][3+4],
 	memoiresPartagees[0][3],memoiresPartagees[1][3],
 	memoiresPartagees[0][2],memoiresPartagees[0][2+4],memoiresPartagees[1][2],memoiresPartagees[1][2+4],
@@ -82,7 +83,7 @@ void affichageCarrefours(){
 	memoiresPartagees[2][2],memoiresPartagees[2][2+4],memoiresPartagees[3][2],memoiresPartagees[3][2+4],
 	memoiresPartagees[2][0+4],memoiresPartagees[2][0],memoiresPartagees[3][0+4],memoiresPartagees[3][0],
 	memoiresPartagees[2][1],memoiresPartagees[3][1],
-	memoiresPartagees[2][1+4],memoiresPartagees[3][1+4],cptExitFaux[0],cptVoitures[0]-1);
+	memoiresPartagees[2][1+4],memoiresPartagees[3][1+4],cptExitFaux[0],cptVoitures[0],cptVoitures[1]);
 	pthread_mutex_unlock(&memPart);
 	pthread_mutex_unlock(&mCptExitFaux);
 	pthread_mutex_unlock(&mCptVoitures);
@@ -345,100 +346,105 @@ void traitement(mess* message)
 	}
 	
 	
-//	printf("Voiture id:%d, sort du carrefour %d par la sortie %d!\n", message->car.id, message->car.numCarrefour, message->car.sortie);
 
-
-	//recherche du carrefour suivant et de l'entree correspondante
-	switch(message->car.numCarrefour){
-		case 0:	//carrefour NO
-		{
-			switch(message->car.sortie){
-			case OUEST:
-//				printf("Sortie de la voiture %d par la sortie OUEST du carrefour 0\n",message->car.id);
-				break;
-			case SUD:
-				numCarrefourSvt=2;
-				messageAEnvoyer.car.entree=NORD;
-				messageAEnvoyer.type=NORD;
-				break;
-			case EST:
-				numCarrefourSvt=1;
-				messageAEnvoyer.car.entree=OUEST;
-				messageAEnvoyer.type=OUEST;
-				break;
-			case NORD:
-//				printf("Sortie de la voiture %d par la sortie NORD du carrefour 0\n",message->car.id);
-				break;
-			}
-			break;
-		}
-		case 1:	//carrefour NE
-		{	
-			switch(message->car.sortie){
-			case OUEST:
-				numCarrefourSvt=0;
-				messageAEnvoyer.car.entree=EST;
-				messageAEnvoyer.type=EST;
-				break;
-			case SUD:
-				numCarrefourSvt=3;
-				messageAEnvoyer.car.entree=NORD;
-				messageAEnvoyer.type=NORD;
-				break;
-			case EST:
-//				printf("Sortie de la voiture %d par la sortie EST du carrefour 1\n",message->car.id);
-				break;
-			case NORD:
-//				printf("Sortie de la voiture %d par la sortie NORD du carrefour 1\n",message->car.id);
+	FILE* fichier = NULL;
+    fichier = fopen("log.txt", "a+");
+ 
+    if (fichier != NULL)
+    {
+		//recherche du carrefour suivant et de l'entree correspondante
+		switch(message->car.numCarrefour){
+			case 0:	//carrefour NO
+			{
+				switch(message->car.sortie){
+				case OUEST:
+					fprintf(fichier, "Sortie de la voiture %d par la sortie OUEST du carrefour 0\n",message->car.id);
+					break;
+				case SUD:
+					numCarrefourSvt=2;
+					messageAEnvoyer.car.entree=NORD;
+					messageAEnvoyer.type=NORD;
+					break;
+				case EST:
+					numCarrefourSvt=1;
+					messageAEnvoyer.car.entree=OUEST;
+					messageAEnvoyer.type=OUEST;
+					break;
+				case NORD:
+					fprintf(fichier, "Sortie de la voiture %d par la sortie NORD du carrefour 0\n",message->car.id);
+					break;
+				}
 				break;
 			}
-			break;	
-		}
-		case 2:	//carrefour SO
-		{
-			switch(message->car.sortie){
-			case OUEST:
-//				printf("Sortie de la voiture %d par la sortie OUEST du carrefour 2\n",message->car.id);
-				break;
-			case SUD:
-//				printf("Sortie de la voiture %d par la sortie SUD du carrefour 2\n",message->car.id);
-				break;
-			case EST:
-				numCarrefourSvt=3;
-				messageAEnvoyer.car.entree=OUEST;	
-				messageAEnvoyer.type=OUEST;			
-				break;
-			case NORD:
-				numCarrefourSvt=0;
-				messageAEnvoyer.car.entree=SUD;		
-				messageAEnvoyer.type=SUD;
+			case 1:	//carrefour NE
+			{	
+				switch(message->car.sortie){
+				case OUEST:
+					numCarrefourSvt=0;
+					messageAEnvoyer.car.entree=EST;
+					messageAEnvoyer.type=EST;
+					break;
+				case SUD:
+					numCarrefourSvt=3;
+					messageAEnvoyer.car.entree=NORD;
+					messageAEnvoyer.type=NORD;
+					break;
+				case EST:
+					fprintf(fichier, "Sortie de la voiture %d par la sortie EST du carrefour 1\n",message->car.id);
+					break;
+				case NORD:
+					fprintf(fichier, "Sortie de la voiture %d par la sortie NORD du carrefour 1\n",message->car.id);
+					break;
+				}
+				break;	
+			}
+			case 2:	//carrefour SO
+			{
+				switch(message->car.sortie){
+				case OUEST:
+					fprintf(fichier, "Sortie de la voiture %d par la sortie OUEST du carrefour 2\n",message->car.id);
+					break;
+				case SUD:
+					fprintf(fichier, "Sortie de la voiture %d par la sortie SUD du carrefour 2\n",message->car.id);
+					break;
+				case EST:
+					numCarrefourSvt=3;
+					messageAEnvoyer.car.entree=OUEST;	
+					messageAEnvoyer.type=OUEST;			
+					break;
+				case NORD:
+					numCarrefourSvt=0;
+					messageAEnvoyer.car.entree=SUD;		
+					messageAEnvoyer.type=SUD;
+					break;
+				}
 				break;
 			}
-			break;
-		}
-		case 3:	//carrefour SE
-		{
-			switch(message->car.sortie){
-			case OUEST:
-				numCarrefourSvt=2;		
-				messageAEnvoyer.car.entree=EST;
-				messageAEnvoyer.type=EST;		
-				break;
-			case SUD:
-//				printf("Sortie de la voiture %d par la sortie SUD du carrefour 3\n",message->car.id);
-				break;
-			case EST:
-//				printf("Sortie de la voiture %d par la sortie EST du carrefour 3\n",message->car.id);	
-				break;
-			case NORD:
-				numCarrefourSvt=1;		
-				messageAEnvoyer.car.entree=SUD;	
-				messageAEnvoyer.type=SUD;	
+			case 3:	//carrefour SE
+			{
+				switch(message->car.sortie){
+				case OUEST:
+					numCarrefourSvt=2;		
+					messageAEnvoyer.car.entree=EST;
+					messageAEnvoyer.type=EST;		
+					break;
+				case SUD:
+					fprintf(fichier, "Sortie de la voiture %d par la sortie SUD du carrefour 3\n",message->car.id);
+					break;
+				case EST:
+					fprintf(fichier, "Sortie de la voiture %d par la sortie EST du carrefour 3\n",message->car.id);	
+					break;
+				case NORD:
+					numCarrefourSvt=1;		
+					messageAEnvoyer.car.entree=SUD;	
+					messageAEnvoyer.type=SUD;	
+					break;
+				}
 				break;
 			}
-			break;
 		}
-	}
+	        fclose(fichier);
+    }
 
 	//ecriture file message carrefour correspondant
 	if(numCarrefourSvt!=-1){
@@ -541,10 +547,9 @@ void envoiVoiture(mess messageAEnvoyer){
 
 void creerVoiture(){
 	mess messageAEnvoyer;
-	pthread_mutex_lock(&mCptVoitures);
-	cptVoitures[0]++;
-	messageAEnvoyer.car.id = cptVoitures[0];
-	pthread_mutex_unlock(&mCptVoitures);		
+	cptVoituresId++;
+	messageAEnvoyer.car.id = cptVoituresId;
+	
 	 
 	messageAEnvoyer.car.numCarrefour = rand()%4; 
 	
@@ -600,9 +605,15 @@ void creerVoiture(){
 	//if((rand()%NbVoituresGlobal)/5==0){  
 	if(rand()%ProbabiliteVehiculePrioritaire==0){  
 		messageAEnvoyer.car.prioritaire=VRAI;
+		pthread_mutex_lock(&mCptVoitures);
+		cptVoitures[VRAI]++;
+		pthread_mutex_unlock(&mCptVoitures);	
 	}
 	else{
 		messageAEnvoyer.car.prioritaire=FAUX;
+		pthread_mutex_lock(&mCptVoitures);
+		cptVoitures[FAUX]++;
+		pthread_mutex_unlock(&mCptVoitures);
 	}
 	messageAEnvoyer.type = messageAEnvoyer.car.entree;
 	envoiVoiture(messageAEnvoyer);
