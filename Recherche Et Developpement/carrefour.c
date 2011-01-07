@@ -38,6 +38,7 @@ void traitantSIGINT(int num){
 int main(int argc, char **argv)
 {
 	srand(time(NULL));
+	remove("log.txt");
 	int i;
 	//creation des files de messages et des memoires partagees de chaque carrefour
 	for(i=0;i<4;i++){
@@ -138,26 +139,6 @@ int main(int argc, char **argv)
 		exit(0);		
 	}
 	else if(pidServeurControleur == 0){
-		// processus gérant le serveur controleur
-		
-		
-		
-		/*char buf[5][15];
-		sprintf(buf[0], "%d", msgidServeurControleur);
-
-		sprintf(buf[1], "%d", idMemPartagee[0]);
-		sprintf(buf[2], "%d", idMemPartagee[1]);
-		sprintf(buf[3], "%d", idMemPartagee[2]);
-		sprintf(buf[4], "%d", idMemPartagee[3]);
-
-		execl("../ServeurControleur/serveur","serveur", buf[0], buf[1], buf[2], buf[3], buf[4], NULL);
-		printf("Mort du serveur controleur...\n");*/
-		
-		
-		
-		
-		
-		
 		serveurControleur(idMemPartagee[0], idMemPartagee[1], idMemPartagee[2], idMemPartagee[3]);		
 		exit(0);	
 	}
@@ -166,12 +147,14 @@ int main(int argc, char **argv)
 			affichageCarrefours();
 			usleep(raffraichissementAffichage);
 		}
+		exit(0);
 	}
 	else if(pidGenerateur == 0){
 		while(1){
 			creerVoiture();
 			usleep(delaisNouvelleVoiture);
 		}
+		exit(0);
 	}
 	else{
 		// pere
