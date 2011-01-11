@@ -72,6 +72,11 @@ int main(int argc, char **argv)
 			memoiresPartagees[carrefour][numVoie]=0;
 		}
 	}
+	
+	/*memoiresPartagees[0][0]=25;
+	memoiresPartagees[0][1]=13;
+	memoiresPartagees[0][2]=12;
+	memoiresPartagees[0][3]=38;*/
 	pthread_mutex_unlock(&memPart);
 	
 	
@@ -94,7 +99,7 @@ int main(int argc, char **argv)
 	//creations des voitures 
 	for(i=0;i<NbVoituresGlobal;i++){
 		creerVoiture();
-	}	
+	}
 		
 	//plateau au demarrage du programme	
 	affichageCarrefours();

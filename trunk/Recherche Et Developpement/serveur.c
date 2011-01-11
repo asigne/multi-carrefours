@@ -110,7 +110,7 @@ void serveurControleur()
 int AjouteTraffic(int TrafficCourant, int Carrefour, int Voie)
 {
 	pthread_mutex_lock(&memPart);
-	if(TrafficCourant == -1 || memoiresPartagees[Carrefour][Voie-1] > MAX_TRAFFIC){
+	if(TrafficCourant == -1 || memoiresPartagees[Carrefour][Voie-1] >= MAX_TRAFFIC){
 		pthread_mutex_unlock(&memPart);
 		return -1;
 	}
@@ -286,7 +286,7 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			break;
 		}
-		case 1:
+		case 1: //Carrefour NE
 		{
 			// 2 possibilités a tester.
 			
@@ -393,7 +393,7 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			break;
 		}
-		case 2:
+		case 2: //Carrefour SO
 		{
 			// 2 possibilités a tester.
 			
@@ -500,7 +500,7 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			break;
 		}
-		case 3:
+		case 3: //Carrefour SO
 		{
 			// 2 possibilités a tester.
 			

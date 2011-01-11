@@ -458,7 +458,7 @@ void traitement(mess* message)
 	//ecriture file message carrefour correspondant
 	if(numCarrefourSvt!=-1){
 		messageAEnvoyer.car.numCarrefour=numCarrefourSvt;
-		usleep(tpsPourTraiterUneVoiture);
+		//usleep(tpsPourTraiterUneVoiture);
 		//la voiture a franchit le carrefour et est envoyee au carrefour suivant
 		envoiVoiture(messageAEnvoyer);
 	}
@@ -471,6 +471,7 @@ void traitement(mess* message)
 void gestionCarrefour(int numCarrefour){
 	int ligne,colonne,i;
 	pthread_t thread_traitement[4];
+	
 
 	//attachement aux memoires partagees des autres carrefours
 	/*for(i=0;i<4;i++){
@@ -481,7 +482,7 @@ void gestionCarrefour(int numCarrefour){
 		//allocation mess
 		mess* mTemp = (mess*) malloc(sizeof(mess));
 
-		int nbVoituresFileMax=NbVoituresGlobal;
+		int nbVoituresFileMax=50000;
 		int numFile=-1;
 		
 		//verification de la presence ou non de vehicule prioritaire au carrefour
@@ -505,13 +506,71 @@ void gestionCarrefour(int numCarrefour){
 		
 		//choix de la file a traiter
 		//aucun vehicule prioritaire present numFile=-1 sinon numFile=numero de la file contenant le vehicule prioritaire
-		if(numFile!=-1){	
+		if(numFile!=-1){
 			//traite le premier vehicule de la file contenant un vehicule prioritaire 
 			msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), numFile, 0);
 		}
 		else{
+			//traite la file bientot complete
+			int numVehicule;
+			int files[2];
+			switch(numCarrefour){
+				case 0:
+					files[0]=SUD;//2
+					files[1]=EST;//3
+					break;
+				case 1:
+					files[0]=OUEST;
+					files[1]=SUD;
+					break;
+				case 2:
+					files[0]=NORD;
+					files[1]=EST;
+					break;
+				case 3:
+					files[0]=NORD;
+					files[1]=OUEST;
+					break;
+			}
+			files[0]=files[0]-1;
+			files[1]=files[1]-1;
+			pthread_mutex_lock(&memPart);
+			if((double)memoiresPartagees[numCarrefour][files[0]]>=((double)pourcentageRemplissageFile/(double)100)*(double)MAX_TRAFFIC){
+				//printf("aaaa %d, %d, %f, %f\n",numCarrefour, files[0], (double)memoiresPartagees[numCarrefour][files[0]], ((double)pourcentageRemplissageFile/(double)100)*(double)MAX_TRAFFIC);
+				numFile=files[0]+1;
+				//printf("a%d\n", numFile);
+				if(numCarrefour==3){
+		
+		//	printf("A%d, %d, %d, %d\n",numCarrefour, numFile, files[0],files[1]);
+		}
+			msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), numFile, 0);
+			}
+			if((double)memoiresPartagees[numCarrefour][files[1]]>=((double)pourcentageRemplissageFile/(double)100)*(double)MAX_TRAFFIC){
+				if(memoiresPartagees[numCarrefour][files[1]]>memoiresPartagees[numCarrefour][files[0]]){
+					numFile=files[1]+1;
+					//printf("b%d\n", numFile);
+					if(numCarrefour==3){
+		
+				//	printf("B%d, %d, %d, %d\n",numCarrefour, numFile, files[0],files[1]);
+					}
+					msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), numFile, 0);
+				}
+				
+			}
+			//printf("c%d\n", numFile);
+			pthread_mutex_unlock(&memPart);
+		}
+		if(numCarrefour==3){
+		//printf("numFillle %d\n",numFile);
+		}
+		if(numFile==-1){
 			//traite le vehicule qui est arrivé en premier
 			msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), 0, 0);
+		}
+		if(numCarrefour==3){
+		pthread_mutex_lock(&memPart);
+		//printf("carrefour %d file traitée%d nbVoitures%d, numCarfVoitur%d\n", numCarrefour, mTemp->car.entree,memoiresPartagees[numCarrefour][mTemp->car.entree-1], mTemp->car.numCarrefour);
+		pthread_mutex_unlock(&memPart);
 		}
 
 		//decrementation du nombre de vehicules selon que le vehicule traite soit prioritaire ou non
@@ -523,14 +582,19 @@ void gestionCarrefour(int numCarrefour){
 		else{
 			pthread_mutex_lock(&memPart);
 			memoiresPartagees[mTemp->car.numCarrefour][mTemp->car.entree-1]--;
+			if(numCarrefour==3){
+			//printf("decrementation\n");
+			}
+			//memoiresPartagees[0][numFile-1]--;
 			pthread_mutex_unlock(&memPart);
 		}
-
+	
 		int indice=(mTemp->car.entree)-1;
 		
 		//creation d'un thread pour traiter le deplacement de la voiture jusqu'au prochain carrefour
 		pthread_create(&thread_traitement[indice], NULL, (void * (*)(void *))traitement, mTemp);		
-		
+	
+		//affichageCarrefours();
 
 		usleep(tpsPourTraiterUneVoiture);
 	}
@@ -582,6 +646,7 @@ void creerVoiture(){
 	
 	 
 	messageAEnvoyer.car.numCarrefour = rand()%4; 
+	//messageAEnvoyer.car.numCarrefour = 0; 
 	
 	int numEntree = rand()%2;
 	switch(messageAEnvoyer.car.numCarrefour)
@@ -599,6 +664,9 @@ void creerVoiture(){
 			messageAEnvoyer.car.entree = numEntree+2;
 		break;
 	}
+	//messageAEnvoyer.car.entree = rand()%4+1;
+	
+	
 	messageAEnvoyer.car.numCarrefourFinal = rand()%4;
 	int numSortie;
 	switch(messageAEnvoyer.car.numCarrefourFinal)
