@@ -44,6 +44,7 @@ void affichageCarrefours(){
 	pthread_mutex_lock(&mCptVoitures);
 	pthread_mutex_lock(&mCptExitFaux);
 	pthread_mutex_lock(&memPart);
+	
 	printf("\
 	\n                  #   |   #                    #   |   #          \
 	\n	          #   |   #                    #   |   #          \
@@ -315,6 +316,7 @@ void traitement(mess* message)
 	//creation de la requete a envoyer
 	msg.type=1;	
 	msg.pidEchgeur=message->car.id;
+	msg.prioritaire=message->car.prioritaire;
 	msg.idOrigine=message->car.numCarrefour;
 	msg.voieOrigine=message->car.entree;
 	msg.idDest=message->car.numCarrefourFinal;

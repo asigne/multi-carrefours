@@ -97,6 +97,7 @@ typedef struct{
 	long type;
 	
 	int pidEchgeur;
+	int prioritaire;
 	int idOrigine;
 	int voieOrigine;
 	int idDest;

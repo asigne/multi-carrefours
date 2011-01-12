@@ -1,4 +1,4 @@
-Pour compiler : gcc carrefour.c fonctions.c serveur.c -o carrefour
+Pour compiler : gcc carrefour.c fonctions.c serveur.c -lpthread -o carrefour
 
 Exécution :
 Modifier la dimension de votre terminal : 80x29 est parfait pour l'affichage
