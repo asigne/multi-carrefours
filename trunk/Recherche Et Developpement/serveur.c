@@ -43,41 +43,11 @@ L'accès est protégé par des sémaphores afin d'éviter les accès concurentie
 
 */
 
-// fonction "Thread" de calcul
 
-
-
-
-
-//int main(int argc, char* argv[])
 void serveurControleur()
 {
-	//printf("LE SERVEUR CONTROLEUR EST FONCTIONNEL\n");
 	int i;
-	/*for(i=0;i<4;i++){
-		memoiresPartagees[i]=(int*) shmat(idMemPartagee[i], NULL, NULL);
-	}*/
 
-/*	if(argc != 6)
-	{
-		printf("Arguments manquants : ./Serveur msgidServeur shmidServeur0 shmidServeur1 shmidServeur2 shmidServeur3\n");
-		exit(1);
-	}
-	
-	msgidServeur = atoi(argv[1]);
-	shmidServeur[0] = atoi(argv[2]);
-	shmidServeur[1] = atoi(argv[3]);
-	shmidServeur[2] = atoi(argv[4]);
-	shmidServeur[3] = atoi(argv[5]);*/
-	
-	// on s'attache au 4 zones mémoires.
-	/*int i;
-	for(i = 0; i<4; i++)
-		memoiresPartagees[i] = (int*) shmat(shmidServeur[i], 0, 0);
-	*/
-	
-	//printf("valeurMemPartagee %d\n", memoiresPartagees[1][0]);
-	
 	pthread_t thread;
 	
 	while(1)
@@ -96,25 +66,20 @@ void serveurControleur()
 		
 		pthread_create(&thread, NULL, (void * (*)(void *))AnalyseTraffic, msg);
 	}
-	
-	
-	// on se détache des 4 zones mémoires.
-	/*for(i = 0; i<4; i++)
-		shmdt(memoiresPartagees[i]);
-	*/
-	
-//	exit(0);
 }
 
 
 int AjouteTraffic(int TrafficCourant, int Carrefour, int Voie)
 {
 	pthread_mutex_lock(&memPart);
-	if(TrafficCourant == -1 || memoiresPartagees[Carrefour][Voie-1] >= MAX_TRAFFIC){
+	
+	if(TrafficCourant == -1 || memoiresPartagees[Carrefour][Voie-1] >= MAX_TRAFFIC)
+	{
 		pthread_mutex_unlock(&memPart);
 		return -1;
 	}
-	else{
+	else
+	{
 		pthread_mutex_unlock(&memPart);
 		return TrafficCourant + memoiresPartagees[Carrefour][Voie-1];
 	}
@@ -134,11 +99,20 @@ void* AnalyseTraffic(ReqEchgeur* req)
 	tDest.idVoie = req->voieDest;
 	
 	
-	// recherche de la voie a emprunter.
-	int idVoieAPrendre = chemin_plus_rapide(tOrigine, tDest);
+	int idVoieAPrendre;
 	
+	if(req->prioritaire == 0)
+	{
+		// Recherche : Chemin le plus rapide si non prioritaire
+		idVoieAPrendre = chemin_plus_rapide(tOrigine, tDest);
+		
+	} else {
+		
+		// Chemin le plus court si prioritaire.
+		idVoieAPrendre = chemin_plus_court(tOrigine, tDest);
+	}
 	
-	// une fois qu'on a le chemin le plus court, on envoie un message à l'échangeur.
+	// une fois qu'on a le chemin, on envoie un message à l'échangeur.
 	
 	RepCtrleur Reponse;
 	
@@ -150,7 +124,6 @@ void* AnalyseTraffic(ReqEchgeur* req)
 	
 	// liberation du message.
 	free(req);
-	
 	
 	// fin du thread.
 	pthread_exit(0);
@@ -169,9 +142,6 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 	{
 		// on est sur le bon carrefour.
 		
-	//	printf("> Bon carrefour : N°%d, traffic derniere voie :%d\n", 
-			//			Destination.idCarrefour, memoiresPartagees[Origine.idCarrefour][Origine.idVoie]);
-		
 		// on retourne Dest qui contient le bon numéro de voie (Exit)
 		return Destination.idVoie;
 	}
@@ -185,8 +155,8 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			Traffic CheminA, CheminB;
 			
-			CheminA.Traffic = 0; // memoiresPartagees[Origine.idCarrefour][Origine.idVoie];
-			CheminB.Traffic = 0; // memoiresPartagees[Origine.idCarrefour][Origine.idVoie];
+			CheminA.Traffic = 0;
+			CheminB.Traffic = 0;
 			
 			///////////////////////////////
 			// A -> on prend vers l'est.
@@ -292,8 +262,8 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			Traffic CheminA, CheminB;
 			
-			CheminA.Traffic = 0; // memoiresPartagees[Origine.idCarrefour, Origine.idVoie];
-			CheminB.Traffic = 0; // memoiresPartagees[Origine.idCarrefour, Origine.idVoie];
+			CheminA.Traffic = 0;
+			CheminB.Traffic = 0;
 			
 			///////////////////////////////
 			// A -> on prend vers l'ouest.
@@ -399,8 +369,8 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			Traffic CheminA, CheminB;
 			
-			CheminA.Traffic = 0; // memoiresPartagees[Origine.idCarrefour, Origine.idVoie];
-			CheminB.Traffic = 0; // memoiresPartagees[Origine.idCarrefour, Origine.idVoie];
+			CheminA.Traffic = 0;
+			CheminB.Traffic = 0;
 			
 			///////////////////////////////
 			// A -> on prend vers le nord.
@@ -506,8 +476,8 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 			
 			Traffic CheminA, CheminB;
 			
-			CheminA.Traffic = 0; // memoiresPartagees[Origine.idCarrefour, Origine.idVoie];
-			CheminB.Traffic = 0; // memoiresPartagees[Origine.idCarrefour, Origine.idVoie];
+			CheminA.Traffic = 0;
+			CheminB.Traffic = 0;
 			
 			///////////////////////////////
 			// A -> on prend vers le nord.
@@ -604,6 +574,121 @@ int chemin_plus_rapide(Traffic Origine, Traffic Destination)
 				return OUEST;
 			}
 			
+			break;
+		}
+	}
+	
+	return -1;
+}
+
+
+
+
+// /////////////////////////////////////////////////////////
+// Retourne numéro de voie du carrefour en cours a prendre.
+// Solution peux optimisée, sans récurrsivité.
+// Elle teste simplement tout les cas possibles.
+
+int chemin_plus_court(Traffic Origine, Traffic Destination)
+{
+	// bon carrefour dès le début ?!
+	if(Origine.idCarrefour == Destination.idCarrefour)
+	{
+		// on retourne Dest qui contient le bon numéro de voie (Exit)
+		return Destination.idVoie;
+	}
+	
+	
+	switch(Origine.idCarrefour)
+	{
+		case CARREFOUR_NO:
+		{
+			// un switch imbriqué.
+			switch(Destination.idCarrefour)
+			{
+				case CARREFOUR_NE:
+				{
+					return EST;
+				}
+				case CARREFOUR_SO:
+				{
+					return SUD;
+				}
+				case CARREFOUR_SE:
+				{
+					// pour la diagonale, on prend le chemin le plus rapide.
+					// puisqu'il n'y a pas de chemin plus court. (ou plutot 2)
+					return chemin_plus_rapide(Origine, Destination);
+				}
+			}
+			
+			break;
+		}
+		case CARREFOUR_NE:
+		{
+			// un switch imbriqué.
+			switch(Destination.idCarrefour)
+			{
+				case CARREFOUR_NO:
+				{
+					return OUEST;
+				}
+				case CARREFOUR_SE:
+				{
+					return SUD;
+				}
+				case CARREFOUR_SO:
+				{
+					// pour la diagonale, on prend le chemin le plus rapide.
+					// puisqu'il n'y a pas de chemin plus court. (ou plutot 2)
+					return chemin_plus_rapide(Origine, Destination);
+				}
+			}
+			
+			break;
+		}
+		case CARREFOUR_SO:
+		{
+			// un switch imbriqué.
+			switch(Destination.idCarrefour)
+			{
+				case CARREFOUR_NO:
+				{
+					return NORD;
+				}
+				case CARREFOUR_SE:
+				{
+					return EST;
+				}
+				case CARREFOUR_NE:
+				{
+					// pour la diagonale, on prend le chemin le plus rapide.
+					// puisqu'il n'y a pas de chemin plus court. (ou plutot 2)
+					return chemin_plus_rapide(Origine, Destination);
+				}
+			}
+			break;
+		}
+		case CARREFOUR_SE:
+		{
+			// un switch imbriqué.
+			switch(Destination.idCarrefour)
+			{
+				case CARREFOUR_NE:
+				{
+					return NORD;
+				}
+				case CARREFOUR_SO:
+				{
+					return OUEST;
+				}
+				case CARREFOUR_NO:
+				{
+					// pour la diagonale, on prend le chemin le plus rapide.
+					// puisqu'il n'y a pas de chemin plus court. (ou plutot 2)
+					return chemin_plus_rapide(Origine, Destination);
+				}
+			}
 			break;
 		}
 	}
