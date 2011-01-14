@@ -2,36 +2,15 @@
 
 void traitantSIGINT(int num){
 	double pourcentageReussite;
+	
 	pthread_mutex_lock(&mCptExitFaux);
 	pthread_mutex_lock(&mCptVoitures);
 	pourcentageReussite=(1-(double)cptExitFaux[0]/((double)cptVoitures[VRAI]+(double)cptVoitures[FAUX]))*100;
 	printf("\nLe pourcentage de réussite est de : %.2f\n",pourcentageReussite);
 	pthread_mutex_unlock(&mCptVoitures);
-	
-	//printf("Interruption du programme !\n%d voitures ont été dirrigées vers des sorties non souhaitées pour faciliter la circulation des véhicules prioritaires.\n",cptExitFaux[0]);
 	pthread_mutex_unlock(&mCptExitFaux);
 	
-	
-	
-	
-	//destruction des semaphores
-	int ligne,colonne,numCarrefour;
-	for(numCarrefour = 0; numCarrefour<4; numCarrefour++){
-		for(ligne = 0; ligne<2; ligne++){
-			for(colonne = 0; colonne<2; colonne++){	
-				semctl(sem_in_out[numCarrefour][ligne][colonne], 0, IPC_RMID, 0);	
-			}
-		}
-	}
-	//suppression des memoires partagées et des files de messages
-	int i;
-	for(i=0; i<4; i++){
-		shmctl(idMemPartagee[i], IPC_RMID, NULL);
-		msgctl(msgid[i],IPC_RMID, NULL);
-	}
-	shmctl(idCptExitFaux, IPC_RMID, NULL);
-	shmctl(idCptVoitures, IPC_RMID, NULL);
-	msgctl(msgidServeurControleur, IPC_RMID, NULL);
+	supprimerIPC();
 	//raise(SIGTERM);
 }
 
@@ -40,50 +19,7 @@ int main(int argc, char **argv)
 	srand(time(NULL));
 	remove("log.txt");
 	int i;
-	//creation des files de messages et des memoires partagees de chaque carrefour
-	for(i=0;i<4;i++){
-		msgid[i]= msgget(ftok(argv[0], ID_PROJET+cptIdentifiant), IPC_CREAT | IPC_EXCL | 0666);
-		cptIdentifiant++;		
-		idMemPartagee[i]=shmget(ftok(argv[0], ID_PROJET+cptIdentifiant), 8*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
-		cptIdentifiant++;
-	}
-	//creation file de message du serveur controleur
-	msgidServeurControleur=msgget(ftok(argv[0], ID_PROJET+cptIdentifiant), IPC_CREAT | IPC_EXCL | 0666);
-	cptIdentifiant++;
-
-	for(i=0;i<4;i++){
-		memoiresPartagees[i]=(int*) shmat(idMemPartagee[i], NULL, NULL);
-	}
 	
-	
-	idCptExitFaux=shmget(ftok(argv[0], ID_PROJET+cptIdentifiant), sizeof(int), IPC_CREAT | IPC_EXCL | 0777);
-	cptIdentifiant++;
-	cptExitFaux=(int*)shmat(idCptExitFaux, NULL, NULL);
-	
-	idCptVoitures=shmget(ftok(argv[0], ID_PROJET+cptIdentifiant), sizeof(int), IPC_CREAT | IPC_EXCL | 0777);
-	cptIdentifiant++;
-	cptVoitures=(int*)shmat(idCptVoitures, NULL, NULL);
-	
-	//initialisation des compteurs de chaque voie
-	int carrefour, numVoie;
-	pthread_mutex_lock(&memPart);
-	for(carrefour = 0; carrefour<4; carrefour++){
-		for(numVoie = 0; numVoie<8; numVoie++){
-			memoiresPartagees[carrefour][numVoie]=0;
-		}
-	}
-	
-	/*memoiresPartagees[0][0]=25;
-	memoiresPartagees[0][1]=13;
-	memoiresPartagees[0][2]=12;
-	memoiresPartagees[0][3]=38;*/
-	pthread_mutex_unlock(&memPart);
-	
-	
-	pthread_mutex_lock(&mCptVoitures);
-	cptVoitures[0]=1;
-	pthread_mutex_unlock(&mCptVoitures);
-
 	//creation et initialisation des semaphores gerant les croisements des voitures aux carrefours
 	int numCarrefour,ligne,colonne;
 	for(numCarrefour = 0; numCarrefour<4; numCarrefour++){
@@ -96,14 +32,53 @@ int main(int argc, char **argv)
 		}
 	}
 	
-	//creations des voitures 
+	//creation des files de messages et des memoires partagees et semaphore de chaque carrefour
+	for(i=0;i<4;i++){
+		msgid[i]= msgget(ftok(argv[0], ID_PROJET+cptIdentifiant), IPC_CREAT | IPC_EXCL | 0666);
+		cptIdentifiant++;		
+		idMemPartagee[i]=shmget(ftok(argv[0], ID_PROJET+cptIdentifiant), 8*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
+		cptIdentifiant++;
+		memoiresPartagees[i]=(int*) shmat(idMemPartagee[i], NULL, NULL);
+		semCptVoituresDansCarrefour[i]=creerSem(ftok(argv[0], ID_PROJET+cptIdentifiant), 4);
+		initSem(semCptVoituresDansCarrefour[i], 3);
+		cptIdentifiant++;	
+	}
+
+	//creation memoire partagee pour compteur d'echecs
+	idCptExitFaux=shmget(ftok(argv[0], ID_PROJET+cptIdentifiant), sizeof(int), IPC_CREAT | IPC_EXCL | 0777);
+	cptIdentifiant++;
+	cptExitFaux=(int*)shmat(idCptExitFaux, NULL, NULL);
+	//creation memoire partagee pour compteur de voitures
+	idCptVoitures=shmget(ftok(argv[0], ID_PROJET+cptIdentifiant), sizeof(int), IPC_CREAT | IPC_EXCL | 0777);
+	cptIdentifiant++;
+	cptVoitures=(int*)shmat(idCptVoitures, NULL, NULL);
+	
+	//creation file de message du serveur controleur
+	msgidServeurControleur=msgget(ftok(argv[0], ID_PROJET+cptIdentifiant), IPC_CREAT | IPC_EXCL | 0666);
+	cptIdentifiant++;
+	
+	
+	//initialisation des compteurs de chaque voie
+	int carrefour, numVoie;
+	for(carrefour = 0; carrefour<4; carrefour++){
+		for(numVoie = 0; numVoie<8; numVoie++){
+			memoiresPartagees[carrefour][numVoie]=0;
+		}
+	}
+	
+	//initialisation du nombre de voitures à 0	
+	cptVoitures[0]=0;
+
+
+	//creations des voitures initiales
 	for(i=0;i<NbVoituresGlobal;i++){
 		creerVoiture();
 	}
 		
-	//plateau au demarrage du programme	
+	//affichage du circuit au demarrage du programme	
 	affichageCarrefours();
 	
+	//recuperation pid du pere
 	pidPere=getpid();
 
 	//creation des 4 carrefour	
@@ -112,13 +87,18 @@ int main(int argc, char **argv)
 			pidCarrefour[i] = fork();
 		}
 	}
+	
 	//creation serveur controleur et du processus charge de l'affichage
 	if(getpid()==pidPere){
 		pidServeurControleur = fork();
 	}
+	
+	//creation processus pour l'affichage
 	if(getpid()==pidPere){	
 		pidAffichage = fork();
 	}
+	
+	//creation processus pour envoi des voitures dans le circuit
 	if(getpid()==pidPere){	
 		pidGenerateur = fork();
 	}	
