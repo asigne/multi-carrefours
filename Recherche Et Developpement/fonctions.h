@@ -43,6 +43,12 @@ int idCptVoitures;
 int *cptVoitures;
 static pthread_mutex_t mCptVoitures;
 
+
+int semCptVoituresDansCarrefour[4];
+
+
+
+
 enum{
 	FAUX=0,
 	VRAI

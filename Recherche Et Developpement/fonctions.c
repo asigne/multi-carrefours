@@ -1,7 +1,7 @@
 #include "fonctions.h"
 
-void supprimerIPC(){
-	//destruction des semaphores
+void supprimerIPC(){	
+	//destruction des semaphores de chaque carrefour
 	int ligne,colonne,numCarrefour;
 	for(numCarrefour = 0; numCarrefour<4; numCarrefour++){
 		for(ligne = 0; ligne<2; ligne++){
@@ -10,35 +10,26 @@ void supprimerIPC(){
 			}
 		}
 	}
-	//suppression des memoires partagées et des files de messages
+	//destruction des memoires partagées et des files de messages et du sémaphore de chaque carrefour
 	int i;
 	for(i=0; i<4; i++){
-		shmctl(idMemPartagee[i],0, IPC_RMID, NULL);
-		shmctl(msgid[i],0, IPC_RMID, NULL);
+		shmctl(idMemPartagee[i], IPC_RMID, NULL);
+		msgctl(msgid[i],IPC_RMID, NULL);
+		semctl(semCptVoituresDansCarrefour[i], 0, IPC_RMID, 0);	
 	}
-}
+	
+	//desctruction mémoires partagées pour les compteurs
+	shmctl(idCptExitFaux, IPC_RMID, NULL);
+	shmctl(idCptVoitures, IPC_RMID, NULL);
+	
+	//destruction file de message serveur-controleur
+	msgctl(msgidServeurControleur, IPC_RMID, NULL);
 
-/*
-void nbMessageDansFile(int numCarrefour){
-	struct msqid_ds msqid_ds, *buf;
-    buf = & msqid_ds;
-	msgctl(msgid[numCarrefour], IPC_STAT, buf);
-	printf("Il y a %d véhicule(s) dans la file du carrefour %d\n",buf->msg_qnum, numCarrefour);
+	//destruction des mutex
+	pthread_mutex_destroy(&memPart);
+	pthread_mutex_destroy(&mCptVoitures);
+	pthread_mutex_destroy(&mCptExitFaux);
 }
-*/
-
-/*
-void affichageCarrefour(int carrefour){
-	int numVoie;	
-	printf("Etat du carrefour %d\n",carrefour);
-	pthread_mutex_lock(&memPart);		
-	for(numVoie = 0; numVoie<4; numVoie++){	
-		printf("Voie numero %d : np:%d  p:%d\n",numVoie+1, memoiresPartagees[carrefour][numVoie], memoiresPartagees[carrefour][numVoie+4]);		
-	}
-	pthread_mutex_unlock(&memPart);
-	printf("\n");
-}
-*/
 
 void affichageCarrefours(){
 	pthread_mutex_lock(&mCptVoitures);
@@ -90,7 +81,7 @@ void affichageCarrefours(){
 	pthread_mutex_unlock(&mCptVoitures);
 }
 
-
+//fonctions suivantes utiles pour les semaphores
 int creerSem(int clef, int nombre){
 	int semid = semget(clef, nombre, IPC_CREAT | IPC_EXCL | 0666);
 	return semid;
@@ -120,35 +111,6 @@ int VSem(int id){
 }
 
 
-/*
-void destructionSem(){
-	int ligne,colonne,numCarrefour;
-	 //Destruction du sémaphore
-	for(numCarrefour = 0; numCarrefour<4; numCarrefour++){
-		for(ligne = 0; ligne<2; ligne++){
-			for(colonne = 0; colonne<2; colonne++){	
-				semctl(sem_in_out[numCarrefour][ligne][colonne], 0, IPC_RMID, 0);		
-			}
-		}
-	}
-}
-
-void afficheEtatSem(){
-	int ligne,colonne,numCarrefour;
-	printf("Etat des sémaphores\n");
-	for(numCarrefour = 0; numCarrefour<4; numCarrefour++){
-		for(ligne = 0; ligne<2; ligne++){
-			for(colonne = 0; colonne<2; colonne++){	
-				//printf("%lld\t",sem_in_out[numCarrefour][ligne][colonne]);
-				printf("%d\t", semctl(sem_in_out[numCarrefour][ligne][colonne], 0, GETVAL, 0));		
-			}
-			printf("\n");
-		}
-		printf("\n\n");
-	}
-	printf("\n");
-}
-*/
 
 void tourneDroite(voiture v){
 	int ligne,colonne;
@@ -216,7 +178,6 @@ void enFace(voiture v){
 			PSem(sem_in_out[numCarrefour][lDeb][C]);
 			VSem(sem_in_out[numCarrefour][lDeb][C-1*k]);
 		}
-		//printf("envoie voiture dans le tube correspondant\n");		
 		VSem(sem_in_out[numCarrefour][lFin][cFin]);
 	}
 	else{	
@@ -226,7 +187,6 @@ void enFace(voiture v){
 			PSem(sem_in_out[numCarrefour][L][cFin]);
 			VSem(sem_in_out[numCarrefour][L-1*k][cFin]);
 		}
-		//printf("envoie voiture dans le tube correspondant\n");		
 		VSem(sem_in_out[numCarrefour][lFin][cFin]);
 	}
 }
@@ -281,8 +241,6 @@ void tourneGauche(voiture v){
 			PSem(sem_in_out[numCarrefour][L][cFin]);
 			VSem(sem_in_out[numCarrefour][L-1*m][cFin]);
 		}
-		//envoie dans tube
-		//printf("envoie voiture dans le tube correspondant\n");		
 		VSem(sem_in_out[numCarrefour][lFin][cFin]);
 	}
 	else{	
@@ -297,9 +255,6 @@ void tourneGauche(voiture v){
 			PSem(sem_in_out[numCarrefour][lFin][C]);
 			VSem(sem_in_out[numCarrefour][lFin][C-1*k]);
 		}
-
-		//envoie dans tube
-		//printf("envoie voiture dans le tube correspondant\n");		
 		VSem(sem_in_out[numCarrefour][lFin][cFin]);
 	}
 }
@@ -456,11 +411,12 @@ void traitement(mess* message)
 		}
 	        fclose(fichier);
     }
-
+	VSem(semCptVoituresDansCarrefour[message->car.numCarrefour]);
 	//ecriture file message carrefour correspondant
 	if(numCarrefourSvt!=-1){
 		messageAEnvoyer.car.numCarrefour=numCarrefourSvt;
 		//usleep(tpsPourTraiterUneVoiture);
+		
 		//la voiture a franchit le carrefour et est envoyee au carrefour suivant
 		envoiVoiture(messageAEnvoyer);
 	}
@@ -494,8 +450,6 @@ void gestionCarrefour(int numCarrefour){
 			if(memoiresPartagees[numCarrefour][i]>0){
 				// choix de la file ayant le moins de voiture dans le cas ou il y a plusieurs vehicules prioritaires a un carrefour
 				if(memoiresPartagees[numCarrefour][i-4]+memoiresPartagees[numCarrefour][i]<nbVoituresFileMax){
-					//printf("carrefour %d, file %d, nb %d, nbMax%d\n",numCarrefour,i,
-					//	memoiresPartagees[numCarrefour][i-4]+memoiresPartagees[numCarrefour][i],nbVoituresFileMax);
 					numFile=i-3;	//1 OUEST, 2 SUD, 3 EST, 4 NORD
 					//nb de voitures présentes dans la file ou le véhicule prioritaire se trouve
 					nbVoituresFileMax=memoiresPartagees[numCarrefour][i-4]+memoiresPartagees[numCarrefour][i]; 
@@ -503,10 +457,8 @@ void gestionCarrefour(int numCarrefour){
 			}
 			pthread_mutex_unlock(&memPart);
 		}
-//		printf("carrefour %d, numFile %d\n",numCarrefour, numFile);
-		
-		
 		//choix de la file a traiter
+		
 		//aucun vehicule prioritaire present numFile=-1 sinon numFile=numero de la file contenant le vehicule prioritaire
 		if(numFile!=-1){
 			//traite le premier vehicule de la file contenant un vehicule prioritaire 
@@ -516,6 +468,7 @@ void gestionCarrefour(int numCarrefour){
 			//traite la file bientot complete
 			int numVehicule;
 			int files[2];
+			//detemrination des file dont la quantite est limite
 			switch(numCarrefour){
 				case 0:
 					files[0]=SUD;//2
@@ -538,41 +491,20 @@ void gestionCarrefour(int numCarrefour){
 			files[1]=files[1]-1;
 			pthread_mutex_lock(&memPart);
 			if((double)memoiresPartagees[numCarrefour][files[0]]>=((double)pourcentageRemplissageFile/(double)100)*(double)MAX_TRAFFIC){
-				//printf("aaaa %d, %d, %f, %f\n",numCarrefour, files[0], (double)memoiresPartagees[numCarrefour][files[0]], ((double)pourcentageRemplissageFile/(double)100)*(double)MAX_TRAFFIC);
 				numFile=files[0]+1;
-				//printf("a%d\n", numFile);
-				if(numCarrefour==3){
-		
-		//	printf("A%d, %d, %d, %d\n",numCarrefour, numFile, files[0],files[1]);
-		}
-			msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), numFile, 0);
+				msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), numFile, 0);
 			}
 			if((double)memoiresPartagees[numCarrefour][files[1]]>=((double)pourcentageRemplissageFile/(double)100)*(double)MAX_TRAFFIC){
 				if(memoiresPartagees[numCarrefour][files[1]]>memoiresPartagees[numCarrefour][files[0]]){
 					numFile=files[1]+1;
-					//printf("b%d\n", numFile);
-					if(numCarrefour==3){
-		
-				//	printf("B%d, %d, %d, %d\n",numCarrefour, numFile, files[0],files[1]);
-					}
 					msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), numFile, 0);
 				}
-				
 			}
-			//printf("c%d\n", numFile);
 			pthread_mutex_unlock(&memPart);
-		}
-		if(numCarrefour==3){
-		//printf("numFillle %d\n",numFile);
 		}
 		if(numFile==-1){
 			//traite le vehicule qui est arrivé en premier
 			msgrcv(msgid[numCarrefour], mTemp, sizeof(mess), 0, 0);
-		}
-		if(numCarrefour==3){
-		pthread_mutex_lock(&memPart);
-		//printf("carrefour %d file traitée%d nbVoitures%d, numCarfVoitur%d\n", numCarrefour, mTemp->car.entree,memoiresPartagees[numCarrefour][mTemp->car.entree-1], mTemp->car.numCarrefour);
-		pthread_mutex_unlock(&memPart);
 		}
 
 		//decrementation du nombre de vehicules selon que le vehicule traite soit prioritaire ou non
@@ -584,24 +516,19 @@ void gestionCarrefour(int numCarrefour){
 		else{
 			pthread_mutex_lock(&memPart);
 			memoiresPartagees[mTemp->car.numCarrefour][mTemp->car.entree-1]--;
-			if(numCarrefour==3){
-			//printf("decrementation\n");
-			}
-			//memoiresPartagees[0][numFile-1]--;
 			pthread_mutex_unlock(&memPart);
 		}
 	
 		int indice=(mTemp->car.entree)-1;
 		
+		//pour n'autoriser que 3 véhicules simultanement dans un carrefour
+		PSem(semCptVoituresDansCarrefour[numCarrefour]);
+		
 		//creation d'un thread pour traiter le deplacement de la voiture jusqu'au prochain carrefour
 		pthread_create(&thread_traitement[indice], NULL, (void * (*)(void *))traitement, mTemp);		
 	
-		//affichageCarrefours();
-
 		usleep(tpsPourTraiterUneVoiture);
 	}
-	//destruction semaphores du carrefour
-	//destructionSem();
 }
 
 void envoiVoiture(mess messageAEnvoyer){
@@ -645,11 +572,11 @@ void creerVoiture(){
 	mess messageAEnvoyer;
 	cptVoituresId++;
 	messageAEnvoyer.car.id = cptVoituresId;
-	
 	 
+	//choix du carefour d'entree au hasard 
 	messageAEnvoyer.car.numCarrefour = rand()%4; 
-	//messageAEnvoyer.car.numCarrefour = 0; 
 	
+	//choix de l'entree au hasard
 	int numEntree = rand()%2;
 	switch(messageAEnvoyer.car.numCarrefour)
 	{
@@ -666,11 +593,11 @@ void creerVoiture(){
 			messageAEnvoyer.car.entree = numEntree+2;
 		break;
 	}
-	//messageAEnvoyer.car.entree = rand()%4+1;
-	
-	
+	//choix du carefour de sortie au hasard
 	messageAEnvoyer.car.numCarrefourFinal = rand()%4;
 	int numSortie;
+	
+	//choix de la sortie finale au hasard
 	switch(messageAEnvoyer.car.numCarrefourFinal)
 	{
 		case 0:
@@ -702,7 +629,7 @@ void creerVoiture(){
 				&& messageAEnvoyer.car.entree == messageAEnvoyer.car.sortieFinale);
 		break;
 	}
-	//if((rand()%NbVoituresGlobal)/5==0){  
+	//prioritaire ou non en fonction de la proba donnée en parametre 
 	if(rand()%ProbabiliteVehiculePrioritaire==0){  
 		messageAEnvoyer.car.prioritaire=VRAI;
 		pthread_mutex_lock(&mCptVoitures);
