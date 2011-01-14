@@ -4,7 +4,7 @@
 #define ProbabiliteVehiculePrioritaire 50 	//une chance sur X
 #define MAX_TRAFFIC 15						//nombre de vehicules maximum dans une file "inter-carrefour"
 #define delaisNouvelleVoiture 10000//10000			//delais entre la creation de 2 nouvelles voitures (en nanoSecondes)
-#define tpsPourTraiterUneVoiture 30000//40000		//temps pour traiter une voiture
+#define tpsPourTraiterUneVoiture 31000//40000		//temps pour traiter une voiture
 
 #define pourcentageRemplissageFile 80		//pourcentage de remplissage a partir de laquelle la file se vide
 

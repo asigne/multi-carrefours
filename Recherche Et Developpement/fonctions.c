@@ -1,36 +1,5 @@
 #include "fonctions.h"
 
-void supprimerIPC(){	
-	//destruction des semaphores de chaque carrefour
-	int ligne,colonne,numCarrefour;
-	for(numCarrefour = 0; numCarrefour<4; numCarrefour++){
-		for(ligne = 0; ligne<2; ligne++){
-			for(colonne = 0; colonne<2; colonne++){	
-				semctl(sem_in_out[numCarrefour][ligne][colonne], 0, IPC_RMID, 0);	
-			}
-		}
-	}
-	//destruction des memoires partagées et des files de messages et du sémaphore de chaque carrefour
-	int i;
-	for(i=0; i<4; i++){
-		shmctl(idMemPartagee[i], IPC_RMID, NULL);
-		msgctl(msgid[i],IPC_RMID, NULL);
-		semctl(semCptVoituresDansCarrefour[i], 0, IPC_RMID, 0);	
-	}
-	
-	//desctruction mémoires partagées pour les compteurs
-	shmctl(idCptExitFaux, IPC_RMID, NULL);
-	shmctl(idCptVoitures, IPC_RMID, NULL);
-	
-	//destruction file de message serveur-controleur
-	msgctl(msgidServeurControleur, IPC_RMID, NULL);
-
-	//destruction des mutex
-	pthread_mutex_destroy(&memPart);
-	pthread_mutex_destroy(&mCptVoitures);
-	pthread_mutex_destroy(&mCptExitFaux);
-}
-
 void affichageCarrefours(){
 	pthread_mutex_lock(&mCptVoitures);
 	pthread_mutex_lock(&mCptExitFaux);

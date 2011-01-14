@@ -117,12 +117,6 @@ typedef struct{
 	int voieDest;
 } RepCtrleur;
 
-
-
-
-//supprime les IPC crees lors de l'exécution
-void supprimerIPC();
-
 //affichage graphique de l'etat des carrefours
 void affichageCarrefours();
 
